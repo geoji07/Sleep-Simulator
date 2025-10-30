@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Sleep – Scene</title>
+<link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Reenie+Beanie&display=swap" rel="stylesheet">
+<style>
+  @font-face{
+    font-family:'Wild';
+    src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/naverfont_11@1.0/Wild.woff') format('woff');
+    font-weight:normal; font-style:normal; font-display:swap;
+  }
+  :root{
+    --text:#f5f5f5; --muted:#bdbdbd; --panel:#0b0b0bcc; --ring:#ffffff22;
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --sleep-ease:cubic-bezier(.22,.61,.36,1);
+    --cursor-size:120px;
+    --feather-edge:78%;
+    --orb-size: clamp(200px, 30vmin, 460px);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; overflow:hidden; background:#000; color:var(--text);
+       font-family:ui-sans-serif,system-ui,"Noto Sans KR",Apple SD Gothic Neo,Malgun Gothic;}
+
+  /* 배경 */
+  .bg{position:fixed; inset:0; z-index:0;
+      background:
+      radial-gradient(120% 120% at 50% 80%, rgba(0,0,0,.60), rgba(0,0,0,.88)),
+      url("image/Sleep_bg.png") center/cover no-repeat;
+      filter: brightness(.46) contrast(1.03) saturate(.98);}
+
+  /* 인버트 커서 */
+  #fxCursor{
+    position:fixed; left:-9999px; top:-9999px;
+    width:var(--cursor-size); height:var(--cursor-size);
+    border-radius:50%; background:#fff; mix-blend-mode:difference;
+    pointer-events:none; z-index:999999; transform:translate(-50%,-50%);
+    opacity:0; transition:opacity .2s ease, transform .12s ease;
+  }
+  #fxCursor::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid #fff;opacity:.85}
+  body.cursor-on #fxCursor{opacity:1}
+  #fxCursor.is-down{transform:translate(-50%,-50%) scale(.93)}
+  @media (hover:none),(pointer:coarse){#fxCursor{display:none}}
+
+  /* 우상단 컨트롤 */
+  #menuBtn{ position: fixed; top:18px; right:18px; z-index:10000; width:46px; height:46px; border-radius:18px; border:1px solid #ffffff2a; background:#0b0b0bcc; box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35); backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer; transition: transform .22s ease, background .2s ease, box-shadow .25s ease; }
+  #menuBtn:hover{ transform: translateZ(0) scale(1.08) rotate(1.5deg); background:#0b0b0be6; box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 6px #ffffff10; }
+  #menuBtn img{ width:60%; height:60%; object-fit:contain; }
+
+  #audioBtn{ position: fixed; top:18px; right:74px; z-index:9998; width:46px; height:46px; border-radius:999px; border:1px solid #ffffff2a; background:#0b0b0bcc; box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35); backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer; transition: transform .22s ease, background .2s ease, box-shadow .25s ease, opacity .25s ease; }
+  #audioBtn img{ width:60%; height:60%; object-fit:contain; }
+  #audioBtn .icon{ position:absolute; width:62%; height:62%; object-fit:contain; transition: opacity .25s ease, transform .25s ease; }
+  #audioBtn .icon.sound{ opacity:1; }
+  #audioBtn .icon.mute{  opacity:0; transform: scale(.92); }
+  #audioBtn.is-muted .icon.sound{ opacity:0; transform: scale(1.08); }
+  #audioBtn.is-muted .icon.mute{  opacity:1; transform: scale(1); }
+  #audioBtn.is-playing{ box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 7px #7bd0ff20, inset 0 0 0 1px rgba(255,255,255,.4); }
+
+  /* 네비 */
+  .nav-panel{position: fixed; top:12px; right:12px; z-index:9999; width: 360px; max-width: 92vw; height: calc(100vh - 24px);
+    border-radius: 28px; background: #ffffff; color:#111; box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.06);
+    display:flex; flex-direction:column; overflow:hidden; transform-origin: center right; transform: translateX(8px) scale(.98);
+    opacity:0; clip-path: inset(0 0 0 98% round 28px); pointer-events:none;
+    transition: clip-path .28s var(--ease), transform .28s var(--ease), opacity .2s ease;}
+  .nav-panel.open{ clip-path: inset(0 0 0 0 round 28px); transform: translateX(0) scale(1); opacity:1; pointer-events:auto; }
+  .nav-header{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px; font-weight:900; letter-spacing:.4px; font-size:14px; color:#222; border-bottom: 1px solid rgba(0,0,0,.06); }
+  .nav-body{ padding:18px; overflow:auto; }
+  .nav-grid{ display:grid; gap:16px; }
+  .nav-btn{ display:flex; align-items:center; justify-content:center; height:56px; border-radius:16px; background:#fff; color:#111; font-weight:800;
+    box-shadow:0 8px 24px rgba(0,0,0,.08), 0 1px 0 rgba(0,0,0,.06), inset 0 0 0 1px rgba(0,0,0,.06);
+    transition: transform .14s ease, box-shadow .18s ease, background .18s ease; cursor:pointer; user-select:none;
+    text-decoration:none; color:inherit;}
+  .nav-btn:hover{ transform: translateX(-3px); background:#f8fafc; box-shadow:0 12px 28px rgba(0,0,0,.12), 0 1px 0 rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.08); }
+  @media (max-width:600px){ .nav-panel{ width:88vw; } .nav-btn{ height:54px; border-radius:14px; } }
+  .nav-grid a.nav-btn,
+  .nav-grid a.nav-btn:visited,
+  .nav-grid a.nav-btn:hover,
+  .nav-grid a.nav-btn:focus,
+  .nav-grid a.nav-btn:active { text-decoration:none !important; color:inherit; }
+
+  /* 로고 */
+  .logo{position:fixed;left:26px;top:16px;z-index:10001;color:#fff;text-decoration:none;font-weight:900;
+    font-size:clamp(22px,3.4vmin,34px);letter-spacing:.02em;text-shadow:0 2px 12px #0008;user-select:none;}
+
+  /* 오브 */
+  .orbs{position:fixed;inset:0;z-index:2;pointer-events:none}
+  .orbs > *{pointer-events:auto}
+  .orb{position:absolute; width: var(--orb-size); height: var(--orb-size);
+       transform: translate(-50%,-50%) translate(var(--dx,0),var(--dy,0));
+       transition: transform var(--t,8s) var(--ease); pointer-events:none;}
+  .orb-inner{position:absolute;inset:0;border-radius:50%;overflow:hidden;
+    box-shadow:0 6px 26px #00000099,inset 0 0 0 0.5px #ffffff22,inset 0 0 26px #ffffff0d;
+    background:radial-gradient(80% 80% at 50% 50%,#222,#0f0f0f);
+    transform:scale(var(--hover,1));
+    transition:transform .16s cubic-bezier(.2,.8,.2,1),filter .3s var(--ease),box-shadow .3s var(--ease);
+    will-change:transform;pointer-events:auto;
+    -webkit-mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);}
+  .orb img{ width:110%;height:110%;object-fit:cover; filter: blur(3px) saturate(.92) brightness(.97);
+    transform:translate(-5%,-5%)scale(1.02)rotate(var(--rot,0deg));
+    -webkit-mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%); }
+  .orb .orb-inner:hover{ --hover:1.28; filter:brightness(1.08);
+    box-shadow:0 18px 46px rgba(0,0,0,.62),0 0 0 10px rgba(255,255,255,.08),inset 0 0 0 0.5px #ffffff44,inset 0 0 30px #ffffff12;}
+  .orb .orb-inner:active{--hover:1.18}
+  .orb:hover{z-index:20}
+
+  /* 카드 */
+  .card{position:absolute;z-index:50;width:clamp(220px,28vw,360px);background:#fff;color:#111;border-radius:24px;
+    box-shadow:0 22px 70px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.06);
+    padding:clamp(14px,1.8vw,20px);opacity:0;transform:translateY(8px)scale(.96);
+    transition:opacity .22s var(--ease),transform .22s var(--ease);pointer-events:none;}
+  .card h3{margin:0 0 10px;font-size:clamp(18px,2.2vw,22px);font-weight:900;letter-spacing:.2px}
+  .card .divider{height:1px;background:#00000014;margin:6px 0 12px}
+  .card .thumb{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:clamp(14px,1.6vw,18px);margin:0 0 clamp(10px,1.2vw,12px)}
+  .card p{font-family:"Gloria Hallelujah","Reenie Beanie",cursive; font-size: clamp(14px, 2.6vw, 18px);
+    line-height: 1.8; letter-spacing: .01em; color:#222; white-space: pre-line;}
+  .card-p1{left:26%;top:26%}
+  .card-p2{left:62%;top:30%}
+  .card-p4{left:calc(36% + 14vmin + 3vw); top:62%; transform:translateY(-50%) scale(.96);}
+  @media (max-width:700px){
+    .card-p4{left:36%;top:calc(62% + 14vmin + 2vh);transform:translateX(-50%) scale(.96);}
+  }
+
+  /* 오브 초기 좌표 */
+  .p1{left:14%;top:42%}
+  .p2{left:58%;top:18%}
+  .p3{left:86%;top:28%}
+  .p4{left:36%;top:62%}
+  .p5{left:60%;top:88%}
+
+  /* 카드 표시 */
+  .card-wrap:has(.orb .orb-inner:hover) .card{opacity:1;transform:translateY(0)scale(1);pointer-events:auto;}
+  .card-wrap:has(.orb.p4 .orb-inner:hover) .card-p4{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1);}
+  @media (max-width:700px){
+    .card-wrap:has(.orb.p4 .orb-inner:hover) .card-p4{transform:translateX(-50%) scale(1);}
+  }
+  .card-p3{ left: calc(86% - 22vmin - 4vw); top:  calc(28% + 14vmin + 3vh); transform: translate(-50%, -50%) scale(.96);}
+  @media (max-width:700px){ .card-p3{ left: 86%; top: calc(28% + 18vmin + 3vh); transform: translateX(-50%) scale(1);} }
+  .card-wrap:has(.orb.p3 .orb-inner:hover) .card-p3{ opacity:1; pointer-events:auto; transform: translate(-50%, -50%) scale(1); }
+  @media (max-width:700px){ .card-wrap:has(.orb.p3 .orb-inner:hover) .card-p3{ transform: translateX(-50%) scale(1); } }
+  .card-p5{ left: calc(60% + 22vmin + 5vw); top:  calc(88% - 20vmin - 4vh); transform: translate(-50%, -50%) scale(.96); }
+  @media (max-width:700px){ .card-p5{ left: 60%; top: calc(88% + 16vmin + 3vh); transform: translateX(-50%) scale(1); } }
+  .card-wrap:has(.orb.p5 .orb-inner:hover) .card-p5{ opacity:1; pointer-events:auto; transform: translate(-50%, -50%) scale(1); }
+  @media (max-width:700px){ .card-wrap:has(.orb.p5 .orb-inner:hover) .card-p5{ transform: translateX(-50%) scale(1); } }
+
+  /* 플래시 + 고스트 */
+  #flash{ position:fixed; inset:0; z-index:12000;
+    background: radial-gradient(circle at var(--cx) var(--cy),
+      rgba(255,255,255,.75) 0%, rgba(255,255,255,.42) 34%, rgba(255,255,255,0) 64%);
+    clip-path: circle(0% at var(--cx) var(--cy));
+    opacity:0; pointer-events:none;
+    transition: clip-path 1000ms cubic-bezier(.15,.7,.1,1), opacity 800ms ease;}
+  #flash.show{ pointer-events:auto; clip-path: circle(200vmax at var(--cx) var(--cy)); opacity:.80; }
+  #flash.fade{ opacity:0; }
+  .flare-ghost{ position:absolute; z-index:12001; width:var(--sz,22vmin); aspect-ratio:1; border-radius:50%;
+    left:0; top:0; transform: translate(calc(var(--cx) + var(--dx)), calc(var(--cy) + var(--dy))) scale(1);
+    cursor:pointer; mix-blend-mode:screen;
+    background: radial-gradient(closest-side, rgba(255,255,255,.95) 9%, rgba(255,245,226,.78) 22%, rgba(255,226,168,.36) 52%, rgba(255,226,168,0) 72%),
+               radial-gradient(90% 90% at 50% 50%, rgba(255,255,255,.10), transparent 70%);
+    box-shadow: 0 0 56px 16px rgba(255,236,190,.22), inset 0 0 24px rgba(255,255,255,.68);
+    filter: saturate(1.0) blur(.1px); transition: transform .18s ease-out, opacity .18s linear;}
+  .flare-ghost::before{ content:""; position:absolute; inset:-12%; border-radius:50%;
+    background: radial-gradient(closest-side, transparent 72%, rgba(255,214,140,.14) 86%, rgba(255,214,140,0) 100%); pointer-events:none; mix-blend-mode:screen; }
+  .flare-ghost::after{ content:""; position:absolute; inset:0; border-radius:50%;
+    box-shadow: inset 0 0 0 1.25px rgba(255,245,225,.5), 0 0 42px 12px rgba(255,230,170,.16); pointer-events:none; mix-blend-mode:screen; }
+  .flare-ghost.gone{ opacity:0; transform: translate(calc(var(--cx) + var(--dx)), calc(var(--cy) + var(--dy))) scale(.08); }
+  #lightHint{ position:fixed; inset:0; z-index:12020; display:flex; align-items:center; justify-content:center;
+    font-family: ui-sans-serif, system-ui, "Noto Sans KR"; font-weight:400; letter-spacing:.02em;
+    font-size: clamp(18px, 3.6vmin, 30px); color:#fff; text-shadow: 0 8px 30px rgba(0,0,0,.6);
+    pointer-events:none; opacity:0; transition:opacity .25s ease; }
+  #lightHint.show{ opacity:1; }
+
+  /* 중앙 고양이 */
+  #catDim{ position:fixed; inset:0; z-index:13000; background: rgba(0,0,0,.55);
+           opacity:0; pointer-events:none; transition: opacity .35s var(--ease); }
+  #catDim.show{ opacity:1; pointer-events:auto; }
+  #centerCat{ position:fixed; left:50%; top:50%; transform: translate(-150%, -50%);
+              z-index:13010; display:none; align-items:center; justify-content:center;
+              transition: transform .55s var(--ease); pointer-events:auto;}
+  #centerCat.show{ transform: translate(-50%, -50%); }
+  #centerCat img{ display:block; height: clamp(720px, 96vh, 1400px); width:auto; object-fit:cover;
+                  user-select:none; -webkit-user-drag:none; filter: drop-shadow(0 30px 60px rgba(0,0,0,.55)); }
+  @media (max-width: 640px){ #centerCat img{ height:auto; width:96vw; } }
+
+  body.is-cat-open .orbs,
+  body.is-cat-open #menuBtn,
+  body.is-cat-open #audioBtn,
+  body.is-cat-open .logo,
+  body.is-cat-open nav { pointer-events: none !important; }
+
+  /* Sleep FX */
+  #sleepDim{ position:fixed; inset:0; z-index:15000; background:#000; opacity:0; pointer-events:none; transition:opacity .35s var(--sleep-ease); }
+  #sleepHint{ position:fixed; inset:0; z-index:15030; display:flex; align-items:center; justify-content:center;
+              color:#fff; font-size:clamp(18px,4.6vmin,44px); text-shadow:0 8px 40px rgba(0,0,0,.8);
+              opacity:0; pointer-events:none; transition:opacity .32s var(--sleep-ease); }
+  #sleepHint.show{ opacity:1; pointer-events:auto; }
+  .eyelid{
+    position:fixed; left:0; right:0;
+    height:58vh; z-index:15020; background:#000; pointer-events:none; overflow:hidden;
+    will-change:transform, top, bottom;
+    border-radius:0 0 54% 54% / 0 0 22% 22%;
+  }
+  #eyelidTop{ top:-58vh; }
+  #eyelidBot{
+    bottom:-58vh;
+    border-radius:54% 54% 0 0 / 22% 22% 0 0;
+  }
+  .eyelid::before{
+    content:""; position:absolute; left:-20vw; right:-20vw;
+    height:22vh; filter: blur(34px); opacity:.95; pointer-events:none;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 10%, rgba(0,0,0,.28) 55%, rgba(0,0,0,.75) 100%);
+  }
+  .eyelid::after{
+    content:""; position:absolute; left:-24vw; right:-24vw;
+    height:28vh; filter: blur(42px); opacity:.55; pointer-events:none;
+    background: radial-gradient(120% 100% at 50% 0%, rgba(0,0,0,0) 0%, rgba(0,0,0,.22) 52%, rgba(0,0,0,.82) 100%);
+  }
+  #eyelidTop::before{ bottom:0; transform:translateY(22%); }
+  #eyelidTop::after { bottom:0; transform:translateY(28%); }
+  #eyelidBot::before{ top:0; transform:scaleY(-1) translateY(22%); }
+  #eyelidBot::after { top:0; transform:scaleY(-1) translateY(28%); }
+
+  /* 중앙 비네트 */
+  #blinkFeather{
+    position:fixed; inset:0; z-index:15010; pointer-events:none;
+    opacity:0; transition:opacity 140ms linear;
+    background:
+      radial-gradient(120% 95% at 50% 50%,
+        rgba(0,0,0,0) 46%,
+        rgba(0,0,0,.14) 60%,
+        rgba(0,0,0,.32) 72%,
+        rgba(0,0,0,.58) 84%,
+        rgba(0,0,0,.88) 100%);
+  }
+
+  /* ===== Alarm overlay ===== */
+  #alarmOverlay{
+    position:fixed; inset:0; z-index:16000;
+    display:none; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  #alarmOverlay.show{ display:flex; pointer-events:auto; }
+  #alarmOverlay .alarm-dim{
+    position:absolute; inset:0; background:#000;
+    opacity:0; transition:opacity .35s cubic-bezier(.22,.61,.36,1);
+  }
+  #alarmOverlay.show .alarm-dim{ opacity:.72; }
+  .alarm-card{
+    position:relative; width:min(520px,92vw); padding:28px 24px 36px;
+    border-radius:34px; background:#0a0a0a; color:#fff;
+    box-shadow:0 28px 90px rgba(0,0,0,.7), inset 0 0 0 1px #ffffff10;
+    transform:translateY(8px) scale(.98); opacity:0;
+    transition:transform .35s var(--ease), opacity .35s var(--ease);
+    overflow:hidden;
+  }
+  #alarmOverlay.show .alarm-card{ transform:translateY(0) scale(1); opacity:1; }
+  .alarm-card.shake{
+    animation: alarm-wobble 900ms cubic-bezier(.36,.07,.19,.97) infinite;
+  }
+  @keyframes alarm-wobble{
+    0%{ transform:translateY(0) rotate(0deg); }
+    15%{ transform:translateY(-1px) rotate(-1.2deg); }
+    30%{ transform:translateY(0.5px) rotate(.9deg); }
+    45%{ transform:translateY(-1px) rotate(-.7deg); }
+    60%{ transform:translateY(.5px) rotate(.6deg); }
+    100%{ transform:translateY(0) rotate(0deg); }
+  }
+  .alarm-lock{ position:absolute; top:10px; left:50%; transform:translateX(-50%); opacity:.6; font-size:18px; }
+  .alarm-label{ margin-top:14px; text-align:center; opacity:.8; font-weight:700; letter-spacing:.3px; }
+  .alarm-label .ico{ margin-right:6px; }
+  .alarm-time{
+    font-size: clamp(64px, 16vmin, 140px);
+    line-height:1; text-align:center; margin:10px 0 22px;
+    font-weight:900; letter-spacing:2px;
+  }
+  .alarm-snooze{
+    display:block; width:84%; margin:0 auto 18px; height:64px;
+    border:0; border-radius:22px; background:#f29b3a; color:#000; font-weight:800;
+    box-shadow:0 8px 22px rgba(0,0,0,.45);
+    opacity:.9; cursor:not-allowed;
+  }
+  .alarm-slider{
+    width:92%; margin:0 auto; height:64px; border-radius:28px;
+    background:#1a1a1a; position:relative; user-select:none;
+    box-shadow: inset 0 0 0 1px #ffffff18, inset 0 0 30px #0008;
+  }
+  .alarm-knob{
+    position:absolute; top:50%; left:8px; transform:translateY(-50%);
+    width:56px; height:56px; border-radius:50%;
+    background:#0a0a0a; box-shadow:0 6px 22px #000a, inset 0 0 0 1px #ffffff22;
+    display:grid; place-items:center; cursor:grab;
+    transition: box-shadow .2s ease;
+  }
+  .alarm-knob:active{ cursor:grabbing; box-shadow:0 10px 26px #000d, inset 0 0 0 1px #ffffff33; }
+  .alarm-knob .sq{ width:18px; height:18px; border-radius:4px; background:#fff; }
+  .alarm-hint{
+    position:absolute; left:96px; right:16px; top:50%; transform:translateY(-50%);
+    color:#bdbdbd; opacity:.7; font-weight:700; letter-spacing:.3px;
+    text-transform:lowercase; pointer-events:none;
+  }
+  .alarm-slider.done{ box-shadow:0 0 0 2px #00ffa040, inset 0 0 0 1px #00ffa040; }
+
+  .alarm-slider, .alarm-knob { touch-action: none; }
+  
+  /* ===== Cloud overlay (p3) ===== */
+/* 오버레이 자체에 배경 절대 주지 말기 */
+#cloudOverlay{
+  position:fixed; inset:0; z-index:16000;
+  display:none; opacity:0; pointer-events:none;
+  background: transparent;   /* 🔑 */
+}
+
+/* show 상태 */
+#cloudOverlay.show{ display:flex; opacity:1; pointer-events:auto; }
+
+/* 어둡게 깔던 레이어는 완전 투명으로 (혹은 아예 삭제) */
+#cloudDim{ position:absolute; inset:0; background:transparent; }  /* 🔑 */
+
+/* 캔버스도 배경 없음 */
+#cloudCanvas{
+  position:absolute; inset:0; width:100%; height:100%;
+  background: transparent;    /* 🔑 */
+}
+
+/* 힌트 */
+.cloud-hint{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:clamp(18px,4.6vmin,44px); color:#fff; letter-spacing:.02em;
+  text-shadow:0 8px 40px rgba(0,0,0,.85);
+  opacity:.92; transition:opacity .25s ease;
+  pointer-events:none;
+}
+.cloud-hint.hide{ opacity:0; }
+
+
+/* 닫힘 전환을 부드럽게 */
+#cloudOverlay{
+  transition: opacity .35s var(--ease);
+}
+#cloudOverlay.leaving{
+  opacity: 0;
+  pointer-events: none;
+}
+#cloudOverlay.leaving #cloudCanvas{
+  filter: blur(8px);
+  transition: filter .85s var(--ease);
+}
+#cloudOverlay.leaving #cloudDim{
+  opacity: 0;
+  transition: opacity .85s var(--ease);
+}
+
+
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<a class="logo" href="Sleep Simulator.html">SlEep</a>
+
+<div class="orbs" id="orbs">
+  <!-- p1: Cat -->
+  <div class="card-wrap">
+    <div class="orb p1"><div class="orb-inner"><img src="image/sleeping_cat.png" alt=""></div></div>
+    <div class="card card-p1">
+      <h3>Sleeping Cat</h3><div class="divider"></div>
+      <img class="thumb" src="image/sleeping_cat.png" alt="">
+      <p>A soft breath… slow and warm.
+A gentle rhythm curls
+into a small, quiet dream.</p>
+    </div>
+  </div>
+
+  <!-- p2: Window -->
+  <div class="card-wrap">
+    <div class="orb p2"><div class="orb-inner"><img src="image/window.png" alt=""></div></div>
+    <div class="card card-p2">
+      <h3>A light window</h3><div class="divider"></div>
+      <img class="thumb" src="image/window.png" alt="">
+      <p>You slowly open your eyes.
+As the light seeps in, reality
+gently embraces you again.</p>
+    </div>
+  </div>
+
+  <!-- p3: Sky -->
+  <div class="card-wrap">
+    <div class="orb p3"><div class="orb-inner"><img src="image/sky.png" alt="Sky"></div></div>
+    <div class="card card-p3">
+      <h3>Sky</h3><div class="divider"></div>
+      <img class="thumb" src="image/sky.png" alt="Sky">
+      <p>Thin air, slow clouds.
+A quiet blue drifts,
+and your thoughts grow light.</p>
+    </div>
+  </div>
+
+  <!-- p4: Sleeping -->
+  <div class="card-wrap">
+    <div class="orb p4"><div class="orb-inner"><img src="image/sleeping.png" alt=""></div></div>
+    <div class="card card-p4">
+      <h3>Sleeping</h3><div class="divider"></div>
+      <img class="thumb" src="image/sleeping.png" alt="">
+      <p>Eyes drift shut.
+Weight sinks deeper.
+Quiet layers of night
+fold over your thoughts.</p>
+    </div>
+  </div>
+
+  <!-- p5: Alarm -->
+  <div class="card-wrap">
+    <div class="orb p5"><div class="orb-inner"><img src="image/alarm.jpg" alt="Alarm clock"></div></div>
+    <div class="card card-p5">
+      <h3>Alarm</h3><div class="divider"></div>
+      <img class="thumb" src="image/alarm.jpg" alt="Alarm">
+      <p>A sharp ring breaks the hush.
+Time tugs you back,
+and the dream thins to light.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 컨트롤 & 네비 -->
+<button id="menuBtn" aria-label="메뉴 열기" aria-expanded="false" title="메뉴">
+  <img src="image/list.png" alt="" aria-hidden="true">
+</button>
+
+<audio id="bgm" src="dreamcore.mp3" preload="auto" loop></audio>
+<button id="audioBtn" aria-label="배경음악 켜기/끄기" aria-pressed="false" title="배경음악 켜기/끄기">
+  <img class="icon sound" src="image/sound.png" alt="" aria-hidden="true">
+  <img class="icon mute"  src="image/mute.png"  alt="" aria-hidden="true">
+</button>
+
+<nav id="navPanel" class="nav-panel" aria-hidden="true">
+  <div class="nav-header"><span>Navigate</span><span style="opacity:.55;font-weight:800;"></span></div>
+  <div class="nav-body">
+    <div class="nav-grid">
+      <a class="nav-btn" href="Sleep Simulator.html">Home</a>
+      <a class="nav-btn" href="dream.html">Dream</a>
+      <a class="nav-btn" href="nightmare.html">Nightmare</a>
+    </div>
+  </div>
+</nav>
+
+<!-- 플래시/힌트 -->
+<div id="flash" aria-hidden="true"></div>
+<div id="fxCursor"></div>
+<div id="lightHint" aria-hidden="true">Remove the light</div>
+
+<!-- 중앙 고양이 -->
+<div id="catDim" aria-hidden="true"></div>
+<div id="centerCat" aria-hidden="true" style="display:none;">
+  <img id="centerCatImg" src="image/cat_blink11.png" alt="Cat">
+</div>
+
+<!-- Sleep FX -->
+<div id="sleepDim" aria-hidden="true"></div>
+<div id="blinkFeather" aria-hidden="true"></div>
+<div id="eyelidTop" class="eyelid" aria-hidden="true"></div>
+<div id="eyelidBot" class="eyelid" aria-hidden="true"></div>
+<div id="sleepHint" aria-hidden="true">Click to wake her up</div>
+
+<!-- ===== Alarm Overlay (HTML) ===== -->
+<div id="alarmOverlay" aria-hidden="true">
+  <div class="alarm-dim"></div>
+  <div class="alarm-card">
+    <div class="alarm-lock">🔒</div>
+    <div class="alarm-label"><span class="ico">⏰</span> Alarm</div>
+    <div class="alarm-time" id="alarmTime">08:00</div>
+    <button class="alarm-snooze" type="button" disabled>Snooze</button>
+    <div class="alarm-slider" id="alarmSlider" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="slide to stop">
+      <div class="alarm-knob" id="alarmKnob"><span class="sq"></span></div>
+      <div class="alarm-hint">slide to stop</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Cloud Overlay (p3) ===== -->
+<div id="cloudOverlay" aria-hidden="true">
+  <div id="cloudDim"></div>
+  <canvas id="cloudCanvas"></canvas>
+  <div class="cloud-hint">Brush away the clouds</div>
+</div>
+
+
+<!-- 사운드 -->
+<audio id="sfx-window" src="sound/window.mp3"   preload="auto"></audio>
+<audio id="sfx-bird"   src="sound/bird.mp3"     preload="auto"></audio>
+<audio id="sfx-meow"   src="sound/meow.mp3"     preload="auto"></audio>
+<audio id="sfx-purr"   src="sound/purring.mp3"  preload="auto"></audio>
+<audio id="sfx-breath" src="sound/breathing.mp3" preload="auto" loop></audio>
+<audio id="sfx-alarmTone" src="sound/alarm.mp3" preload="auto" loop></audio>
+<audio id="sfx-vibration" src="sound/vibration.mp3" preload="auto" loop></audio>
+
+<script>
+/* ===== 커서 ===== */
+(()=>{const c=document.getElementById('fxCursor'),r=document.documentElement;
+let x=-9999,y=-9999,cx=x,cy=y;const ease=.18,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+addEventListener('mousemove',e=>{x=e.clientX;y=e.clientY;document.body.classList.add('cursor-on')});
+addEventListener('mouseleave',()=>{document.body.classList.remove('cursor-on');x=y=-9999});
+addEventListener('mousedown',()=>c.classList.add('is-down'));
+addEventListener('mouseup',()=>c.classList.remove('is-down'));
+addEventListener('wheel',e=>{if(e.ctrlKey)return;const cur=parseFloat(getComputedStyle(r).getPropertyValue('--cursor-size'))||120;
+const nxt=clamp(cur+(e.deltaY>0?-10:10),60,280);r.style.setProperty('--cursor-size',nxt+'px')},{passive:true});
+(function t(){cx+=(x-cx)*ease;cy+=(y-cy)*ease;c.style.left=cx+'px';c.style.top=cy+'px';requestAnimationFrame(t)})();})();
+
+/* ===== 둥둥 이동 ===== */
+(()=>{const orbs=[...document.querySelectorAll('#orbs .orb')];if(!orbs.length)return;
+const rnd=(a,b)=>Math.random()*(b-a)+a;
+function move(el){const d=rnd(6,12),r=rnd(1.5,4),ang=rnd(0,Math.PI*2);
+const dx=Math.cos(ang)*r,dy=Math.sin(ang)*r;el.style.setProperty('--t',d+'s');
+el.style.setProperty('--dx',dx+'vmin');el.style.setProperty('--dy',dy+'vmin');
+const img=el.querySelector('img');if(img)img.style.setProperty('--rot',`${Math.round(rnd(-3,3))}deg`);
+setTimeout(()=>move(el),(d+rnd(.6,1.2))*1000);} orbs.forEach(el=>setTimeout(()=>move(el),rnd(100,900)));})();
+
+/* ===== :has() 폴백 ===== */
+(()=>{const supportsHas=CSS.supports?.('selector(:has(*))'); if(supportsHas)return;
+document.querySelectorAll('.card-wrap').forEach(w=>{
+  const inner=w.querySelector('.orb .orb-inner'); const card=w.querySelector('.card'); if(!inner||!card)return;
+  const isP4=card.classList.contains('card-p4'); const isP5=card.classList.contains('card-p5'); const mm=matchMedia('(max-width:700px)');
+  function enter(){ card.style.opacity=1;
+    if(isP4||isP5){ card.style.transform=mm.matches?'translateX(-50%) scale(1)':'translate(-50%,-50%) scale(1)'; }
+    else{ card.style.transform='translateY(0) scale(1)'; }
+    card.style.pointerEvents='auto';
+  }
+  function leave(){ card.style.opacity=''; card.style.transform=''; card.style.pointerEvents='none'; }
+  inner.addEventListener('mouseenter',enter); inner.addEventListener('mouseleave',leave);
+});})();
+
+/* ===== 네비 토글 ===== */
+(()=>{const btn=document.getElementById('menuBtn'),nav=document.getElementById('navPanel');if(!btn||!nav)return;
+const open=()=>{nav.classList.add('open');nav.setAttribute('aria-hidden','false');btn.setAttribute('aria-expanded','true');};
+const close=()=>{nav.classList.remove('open');nav.setAttribute('aria-hidden','true');btn.setAttribute('aria-expanded','false');};
+btn.addEventListener('click',e=>{e.stopPropagation();nav.classList.contains('open')?close():open();});
+document.addEventListener('click',e=>{if(!nav.contains(e.target)&&e.target!==btn)close();});
+addEventListener('keydown',e=>{if(e.key==='Escape')close();});})();
+
+/* ===== 배경 BGM ===== */
+(()=>{const a=document.getElementById('bgm'),b=document.getElementById('audioBtn');if(!a||!b)return;
+const get=()=>{const v=parseFloat(localStorage.getItem('bgmVol'));return Number.isFinite(v)?Math.max(0,Math.min(1,v)):0.35;};
+const set=v=>localStorage.setItem('bgmVol',String(Math.max(0,Math.min(1,v))));
+let raf=null;const fade=(to,ms=500)=>{if(raf)cancelAnimationFrame(raf);const s=a.volume,t0=performance.now();
+const step=t=>{const k=Math.min(1,(t-t0)/ms);a.volume=s+(to-s)*k;if(k<1)raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);};
+const ui=()=>{const m=a.paused||a.muted||a.volume===0;b.classList.toggle('is-muted',m);b.classList.toggle('is-playing',!m);b.setAttribute('aria-pressed',String(!m));};
+a.muted=false;a.volume=0.0;(async()=>{try{await a.play();fade(get(),900);}catch(_){}finally{ui();}})();
+b.addEventListener('click',async()=>{try{if(a.paused){await a.play();a.muted=false;fade(Math.max(.05,get()),400);}else{fade(0,300);setTimeout(()=>{a.pause();ui();},320);}}catch(_){}finally{ui();}});
+b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.deltaY<0?.06:-.06);v=Math.max(0,Math.min(1,v));a.volume=v;a.muted=(v===0);set(v);if(a.paused&&v>0){a.play().catch(()=>{});}ui();},{passive:false});
+['play','pause','volumechange','emptied','suspend','stalled'].forEach(ev=>a.addEventListener(ev,ui));})();
+
+/* ===== Window 플래시 ===== */
+(()=>{const trigger=document.querySelector('.orb.p2 .orb-inner'); const flash=document.getElementById('flash'); const hint=document.getElementById('lightHint'); if(!trigger||!flash||!hint)return;
+  const EXPAND_MS=1000, HOLD_MS=200, AUTO_OFF_MS=6000; let autoTimer=null;
+  function spawnGhosts(cx,cy){
+    const vw=innerWidth, vh=innerHeight, vminPx=Math.min(vw,vh)/100;
+    flash.querySelectorAll('.flare-ghost').forEach(n=>n.remove());
+    const COUNT=4,R_MIN=18,R_MAX=36,RX=1.35,RY=1,SEP=18,margin=.58,pts=[];
+    for(let i=0;i<COUNT;i++){
+      let tries=0,ok=false,ang=0,rv=0,sizeV=0;
+      while(tries++<80){
+        ang=i*2.3999632297+(Math.random()*0.9-0.45);
+        rv=R_MIN+(R_MAX-R_MIN)*Math.random(); sizeV=16+Math.random()*7;
+        const dxv=Math.cos(ang)*rv*RX, dyv=Math.sin(ang)*rv*RY;
+        const okSep=pts.every(p=>Math.hypot(p.dxv-dxv,p.dyv-dyv)>=SEP);
+        if(!okSep)continue;
+        const mx=cx+dxv*vminPx, my=cy+dyv*vminPx, marginPx=sizeV*vminPx*margin;
+        if(mx>marginPx&&mx<vw-marginPx&&my>marginPx&&my<vh-marginPx){ok=true;pts.push({dxv,dyv,sizeV});break;}
+      }
+      if(!ok){const ang2=Math.random()*Math.PI*2,rv2=(R_MIN+R_MAX)/2;pts.push({dxv:Math.cos(ang2)*rv2*RX,dyv:Math.sin(ang2)*RY,sizeV:19});}
+    }
+    pts.forEach(({dxv,dyv,sizeV})=>{
+      const dx=dxv.toFixed(2)+'vmin', dy=dyv.toFixed(2)+'vmin';
+      const g=document.createElement('div'); g.className='flare-ghost';
+      g.style.setProperty('--dx',dx); g.style.setProperty('--dy',dy); g.style.setProperty('--sz',sizeV.toFixed(1)+'vmin');
+      g.style.opacity='0';
+      g.style.transform=`translate(calc(${cx}px + ${(dxv*0.65).toFixed(2)}vmin), calc(${cy}px + ${(dyv*0.65).toFixed(2)}vmin)) scale(.9)`;
+      flash.appendChild(g);
+      requestAnimationFrame(()=>{g.style.transition='transform .46s cubic-bezier(.2,.7,.2,1), opacity .40s ease';
+        g.style.opacity='1'; g.style.transform=`translate(calc(${cx}px + ${dx}), calc(${cy}px + ${dy})) scale(1)`;});
+      g.addEventListener('click',e=>{
+        e.stopPropagation();
+        if(g.classList.contains('gone'))return;
+        g.classList.add('gone');
+        const cleanup=()=>{g.remove(); if(!flash.querySelector('.flare-ghost')) closeFlash();};
+        g.addEventListener('transitionend',cleanup,{once:true}); setTimeout(cleanup,320);
+      });
+    });
+  }
+  function playFlash(){
+    const cx=innerWidth/2, cy=innerHeight/2;
+    flash.style.setProperty('--cx', cx+'px'); flash.style.setProperty('--cy', cy+'px');
+    flash.classList.remove('fade','show'); void flash.offsetWidth; flash.classList.add('show');
+    hint.classList.add('show');
+    spawnGhosts(cx,cy);
+    playWindowBirdSfx();
+    clearTimeout(autoTimer);
+    autoTimer=setTimeout(()=>{
+      flash.querySelectorAll('.flare-ghost').forEach(n=>n.classList.add('gone'));
+      closeFlash();
+    }, EXPAND_MS + HOLD_MS + AUTO_OFF_MS);
+  }
+  function closeFlash(){
+    hint.classList.remove('show');
+    flash.classList.add('fade');
+    clearTimeout(autoTimer);
+    setTimeout(()=>{ flash.classList.remove('show','fade'); flash.querySelectorAll('.flare-ghost').forEach(n=>n.remove()); }, 900);
+  }
+  trigger.addEventListener('click', playFlash);
+  document.addEventListener('click', ()=>{ if(hint.classList.contains('show')) hint.classList.remove('show'); }, {capture:true});
+  flash.addEventListener('click', (e)=>{ e.stopPropagation(); closeFlash(); });
+})();
+function playWindowBirdSfx(){
+  const win  = document.getElementById('sfx-window');
+  const bird = document.getElementById('sfx-bird');
+  if (win){ try{ win.currentTime=0; win.volume=0.85; win.play(); }catch(_){} }
+  if (bird){
+    try{
+      bird.currentTime=0; bird.volume=0.75; bird.play();
+      const start = performance.now(), DUR = 1000, DELAY = 4000;
+      setTimeout(()=>{ function step(t){ const k=Math.min(1,(t-start)/DUR); bird.volume=0.75*(1-k);
+        if(k<1) requestAnimationFrame(step); else { bird.pause(); bird.currentTime=0; } } requestAnimationFrame(step); }, DELAY);
+    }catch(_){}
+  }
+}
+
+/* ===== 중앙 고양이 ===== */
+(()=> {
+  const catTrigger = document.querySelector('.orb.p1 .orb-inner');
+  const dim        = document.getElementById('catDim');
+  const catWrap    = document.getElementById('centerCat');
+  const imgEl      = document.getElementById('centerCatImg');
+  const meow       = document.getElementById('sfx-meow');
+  const purr       = document.getElementById('sfx-purr');
+
+  if (!catTrigger || !dim || !catWrap || !imgEl) return;
+
+  const OPEN_SRC  = 'image/cat_blink11.png';
+  const BLINK_SRC = 'image/cat_blink22.png';
+
+  let isOpen=false, blinkTimer=null, strokeCount=0, lastX=null, travel=0, purrStopTimer=null;
+
+  function startBlinkLoop(){
+    stopBlinkLoop();
+    const tick = ()=>{
+      if(!isOpen) return;
+      const delay = 800 + Math.random()*1400;
+      blinkTimer=setTimeout(()=>{
+        imgEl.src=BLINK_SRC;
+        setTimeout(()=>{ if(isOpen){ imgEl.src=OPEN_SRC; tick(); } },120);
+      }, delay);
+    };
+    imgEl.src=OPEN_SRC; tick();
+  }
+  function stopBlinkLoop(){ clearTimeout(blinkTimer); blinkTimer=null; }
+
+  function openCat(){
+    if(isOpen) return;
+    isOpen=true; strokeCount=0; travel=0; lastX=null;
+    document.body.classList.add('is-cat-open');
+    dim.classList.add('show');
+    catWrap.style.display='flex'; void catWrap.offsetWidth;
+    catWrap.classList.add('show'); catWrap.setAttribute('aria-hidden','false');
+    try{ meow.currentTime=0; meow.volume=0.9; meow.play(); }catch(_){}
+    startBlinkLoop();
+  }
+  function closeCat(){
+    if(!isOpen) return;
+    isOpen=false; stopBlinkLoop();
+    catWrap.classList.remove('show'); catWrap.setAttribute('aria-hidden','true');
+    catWrap.addEventListener('transitionend', ()=>{ if(!isOpen) catWrap.style.display='none'; }, {once:true});
+    setTimeout(()=>{ if(!isOpen) catWrap.style.display='none'; }, 650);
+    try{ purr.pause(); purr.currentTime=0; }catch(_){}
+    clearTimeout(purrStopTimer);
+    dim.classList.remove('show');
+    document.body.classList.remove('is-cat-open');
+  }
+
+  catTrigger.addEventListener('click', e=>{ e.stopPropagation(); openCat(); });
+
+  catWrap.addEventListener('pointermove', ev=>{
+    if(!isOpen) return;
+    const x = ev.clientX ?? ev.touches?.[0]?.clientX; if(x==null) return;
+    if(lastX==null){ lastX=x; return; }
+    const dx=Math.abs(x-lastX); lastX=x; travel+=dx;
+    const THRESH=120;
+    if(travel>=THRESH){
+      travel=0; strokeCount++;
+      try{
+        purr.currentTime=0; purr.volume=0.9; purr.play().catch(()=>{});
+        clearTimeout(purrStopTimer);
+        purrStopTimer=setTimeout(()=>{ try{ purr.pause(); purr.currentTime=0; }catch(_){} },2000);
+      }catch(_){}
+      if(strokeCount>=60){ closeCat(); }
+    }
+  }, {passive:true});
+})();
+
+/* ===== Sleep FX (p4) ===== */
+(function(){
+  const topEl  = document.getElementById('eyelidTop');
+  const botEl  = document.getElementById('eyelidBot');
+  const dimEl  = document.getElementById('sleepDim');
+  const blinkF = document.getElementById('blinkFeather');
+  const hintEl = document.getElementById('sleepHint');
+  const breath = document.getElementById('sfx-breath');
+
+  let sleepP=0, running=false, sleeping=false, wakeClicks=0;
+  const WAKE_STEPS=5;
+
+  const easeInOut = t => (t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2);
+  const easeOut   = t => 1 - Math.pow(1-t, 3);
+  const easeIn    = t => t*t*t;
+
+  function apply(p){
+    sleepP = Math.max(0, Math.min(1, p));
+    const vh = 58;
+    topEl.style.top    = `calc(${(-vh + vh*sleepP)}vh)`;
+    botEl.style.bottom = `calc(${(-vh + vh*sleepP)}vh)`;
+    dimEl.style.opacity = (0.70*sleepP).toFixed(3);
+    blinkF.style.opacity = (Math.pow(sleepP, 0.65) * 0.9).toFixed(3);
+  }
+
+  function tween(from,to,ms,easing=easeInOut){
+    return new Promise(res=>{
+      const t0=performance.now();
+      function step(t){
+        const k=Math.min(1,(t-t0)/ms); const v=from+(to-from)*easing(k); apply(v);
+        if(k<1) requestAnimationFrame(step); else res();
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  const SEQ = [
+    [0.40,  900, 0.15, 600, 300, 0.70],
+    [0.65, 1100, 0.30, 720, 400, 0.80],
+    [0.85, 1350, 0.45, 880, 520, 0.90],
+    [1.00, 1700, null,   0,   0, 0.98]
+  ];
+
+  async function playSleepSequence(){
+    running=true;
+    try{ breath.volume=0; breath.currentTime=0; await breath.play(); }catch(_){}
+    (function fadeIn(){
+      const v0=0, v1=0.85, ms=900, t0=performance.now();
+      function step(t){ const k=Math.min(1,(t-t0)/ms); breath.volume=v0+(v1-v0)*k; if(k<1) requestAnimationFrame(step); }
+      requestAnimationFrame(step);
+    })();
+
+    blinkF.style.opacity=0;
+
+    for(let i=0;i<SEQ.length;i++){
+      const [toClose, closeMs, toOpen, openMs, waitMs, feather]=SEQ[i];
+      blinkF.style.opacity=feather;
+      await tween(sleepP,toClose,closeMs,easeIn);
+      if(toOpen!=null){
+        await tween(sleepP,toOpen,openMs,easeOut);
+        blinkF.style.opacity=0;
+        if(waitMs>0) await new Promise(r=>setTimeout(r,waitMs));
+      }else{
+        blinkF.style.opacity=0;
+      }
+    }
+
+    sleeping=true; running=false; wakeClicks=0;
+    dimEl.style.pointerEvents='auto';
+    hintEl.classList.add('show');
+  }
+
+  async function handleWakeClick(){
+    if(!sleeping) return;
+    if(hintEl.classList.contains('show')) hintEl.classList.remove('show');
+
+    wakeClicks++;
+    const targetOpen = Math.min(1, wakeClicks/WAKE_STEPS);
+    const newP = 1 - targetOpen;
+    await tween(sleepP,newP,360,easeOut);
+
+    if (wakeClicks >= WAKE_STEPS) {
+      sleeping = false;
+      await tween(sleepP, 0, 420, easeOut);
+      dimEl.style.pointerEvents = 'none';
+      topEl.style.top = '-60vh';
+      botEl.style.bottom = '-60vh';
+      blinkF.style.opacity = '0';
+      const v0 = breath.volume || 0.85, v1 = 0, ms = 600, t0 = performance.now();
+      function step(t){
+        const k=Math.min(1,(t-t0)/ms);
+        breath.volume=v0+(v1-v0)*k;
+        if(k<1){ requestAnimationFrame(step); } else { try{breath.pause(); breath.currentTime=0;}catch(_){ } }
+      }
+      requestAnimationFrame(step);
+    }
+  }
+
+  window.__sleep = {
+    play: async ()=>{ if(running || sleeping) return; dimEl.style.pointerEvents='auto'; await playSleepSequence(); },
+    stop: async ()=>{ hintEl.classList.remove('show'); sleeping=false; running=false; wakeClicks=0;
+      await tween(sleepP,0,380,easeOut); dimEl.style.pointerEvents='none';
+      topEl.style.top='-60vh'; botEl.style.bottom='-60vh'; blinkF.style.opacity='0';
+      try{breath.pause(); breath.currentTime=0;}catch(_){}} };
+
+  document.addEventListener('click', ()=>{ if(sleeping) handleWakeClick(); }, true);
+
+  const sleepTrigger=document.querySelector('.orb.p4 .orb-inner');
+  if(sleepTrigger){ sleepTrigger.addEventListener('click', e=>{ e.stopPropagation(); window.__sleep.play(); }); }
+})();
+
+/* ===== Alarm sequence (p5) ===== */
+(function(){
+  const trigger = document.querySelector('.orb.p5 .orb-inner');
+  const overlay = document.getElementById('alarmOverlay');
+  const card    = overlay?.querySelector('.alarm-card');
+  const timeEl  = document.getElementById('alarmTime');
+  const slider  = document.getElementById('alarmSlider');
+  const knob    = document.getElementById('alarmKnob');
+  const tone    = document.getElementById('sfx-alarmTone');
+  const vib     = document.getElementById('sfx-vibration');
+
+  // 필수 요소만 체크 (사운드 없으면 무음으로 동작)
+  if(!trigger || !overlay || !card || !timeEl || !slider || !knob) return;
+
+  const TIMES = ["08:00","08:30","09:00"];
+  let step=0, dragging=false, startX=0, baseLeft=8, maxLeft=0, done=false;
+
+  function layout(){
+    const s = slider.getBoundingClientRect();
+    const k = knob.getBoundingClientRect();
+    maxLeft = s.width - k.width - 8; // 8px 패딩
+  }
+
+  function playSounds(){
+    try{
+      if(tone){ tone.currentTime=0; tone.volume=.95; tone.play().catch(()=>{}); }
+      if(vib){  vib.currentTime=0;  vib.volume=.7;  vib.play().catch(()=>{}); }
+    }catch(_){}
+  }
+  function stopSounds(){
+    const t0=performance.now(), ms=350;
+    const tStart=tone?.volume ?? 0, vStart=vib?.volume ?? 0;
+    function fade(t){
+      const k=Math.min(1,(t-t0)/ms);
+      if(tone) tone.volume=tStart*(1-k);
+      if(vib)  vib.volume=vStart*(1-k);
+      if(k<1){ requestAnimationFrame(fade); }
+      else{
+        try{ tone?.pause(); vib?.pause(); }catch(_){}
+        if(tone) tone.currentTime=0;
+        if(vib)  vib.currentTime=0;
+      }
+    }
+    requestAnimationFrame(fade);
+  }
+
+  function show(timeStr){
+    timeEl.textContent = timeStr;
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden','false');
+    card.classList.add('shake');
+    slider.classList.remove('done');
+
+    // 다음 프레임에서 실제 폭 계산 후 초기화
+    requestAnimationFrame(()=>{
+      layout();
+      knob.style.left = '8px';
+      slider.setAttribute('aria-valuenow','0');
+      done = false;
+      playSounds();
+    });
+  }
+  function hideAll(){
+    stopSounds();
+    card.classList.remove('shake');
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden','true');
+  }
+
+  function onDown(e){
+    const x = e.clientX ?? e.touches?.[0]?.clientX;
+    if(x==null) return;
+    dragging = true;
+    startX = x;
+    baseLeft = parseFloat(knob.style.left) || 8;
+    knob.setPointerCapture?.(e.pointerId);
+    e.cancelable && e.preventDefault();
+  }
+  function onMove(e){
+    if(!dragging || done) return;
+    const x = e.clientX ?? e.touches?.[0]?.clientX;
+    if(x==null) return;
+    const dx = x - startX;
+    const next = Math.max(8, Math.min(maxLeft, baseLeft + dx));
+    knob.style.left = next + 'px';
+    slider.setAttribute('aria-valuenow', String(Math.round(next/maxLeft*100)));
+    e.cancelable && e.preventDefault();
+    if(next >= maxLeft - 2) onComplete();
+  }
+  function onUp(e){
+    if(!dragging) return;
+    dragging = false;
+    knob.releasePointerCapture?.(e.pointerId);
+    if(done) return;
+    knob.style.transition='left .25s ease';
+    knob.style.left='8px';
+    setTimeout(()=>{ knob.style.transition=''; }, 260);
+  }
+  function onComplete(){
+    done = true;
+    dragging = false;
+    slider.classList.add('done');
+    stopSounds();
+    card.classList.remove('shake');
+    setTimeout(()=>{
+      step++;
+      if(step < TIMES.length){
+        show(TIMES[step]);
+      }else{
+        hideAll(); step = 0;
+      }
+    }, 2000);
+  }
+
+  knob.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove, { passive:false });
+  window.addEventListener('pointerup', onUp, { passive:true });
+
+  trigger.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    step = 0;
+    show(TIMES[step]); // 08:00
+  });
+})(); // ★ 즉시실행 꼭 필요!
+
+/* ===== Cloud sequence (p3): paint clouds, erase with mouse, auto-close ===== */
+(function(){
+  const trigger = document.querySelector('.orb.p3 .orb-inner');
+  const overlay = document.getElementById('cloudOverlay');
+  const canvas  = document.getElementById('cloudCanvas');
+  const hint    = overlay?.querySelector('.cloud-hint');
+  const dim     = document.getElementById('cloudDim');
+  if(!trigger || !overlay || !canvas || !hint || !dim) return;
+
+  const ctx = canvas.getContext('2d');
+  let dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+  let W=0, H=0;
+  let open=false, drawing=false;
+  let lastX=0, lastY=0;
+  let erasedCheckQueued=false;
+  let initialOpaque=1;          // 시작시 알파>0 픽셀 수
+  const CLOSE_RATIO = 0.62;     // 이 비율 이상 지우면 자동 종료
+  const ERASE_RADIUS = 60;      // CSS px 기준(캔버스에서는 *dpr)
+
+  function resize(){
+    const bb = overlay.getBoundingClientRect();
+    W = Math.max(1, Math.floor(bb.width  * dpr));
+    H = Math.max(1, Math.floor(bb.height * dpr));
+    canvas.width  = W; canvas.height = H;
+    canvas.style.width  = bb.width + 'px';
+    canvas.style.height = bb.height + 'px';
+  }
+
+  function rnd(a,b){ return Math.random()*(b-a)+a; }
+
+  // 부드러운 구름 질감 생성: 라디얼 그라디언트 버블을 많이 겹침
+  function drawClouds(){
+    ctx.clearRect(0,0,W,H);
+    // 약간 푸른 빛 섞인 흰 안개 느낌
+    const layers = 3; // 레이어 수
+    for(let L=0; L<layers; L++){
+      const count = Math.round((W*H)/ (13000/dpr) * (0.30 + 0.25*L)); // 화면 크기 비례
+      for(let i=0;i<count;i++){
+        const x = rnd(0, W), y = rnd(0, H);
+        const r = rnd(120*dpr, 340*dpr) * (1 + L*0.25);
+        const g = ctx.createRadialGradient(x,y, r*0.1, x,y, r);
+        const a = 0.06 + 0.045*L; // 중심부 투명도
+        g.addColorStop(0.00, `rgba(255,255,255,${a*1.00})`);
+        g.addColorStop(0.35, `rgba(255,255,255,${a*0.70})`);
+        g.addColorStop(1.00, `rgba(255,255,255,0)`);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+      }
+    }
+    // 가장자리 비네트로 중앙 집중
+    const vg = ctx.createRadialGradient(W*0.5,H*0.5, Math.min(W,H)*0.2, W*0.5,H*0.5, Math.hypot(W,H)*0.55);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.25)');
+    ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+
+    // 시작시 남은 알파 픽셀 수 계산
+    initialOpaque = countOpaque();
+  }
+
+  function countOpaque(){
+    // 샘플링 비용 줄이기 위해 간격 샘플링 (2x2 스텝)
+    const step = 2; // dpr 캔버스 기준
+    const img = ctx.getImageData(0,0,W,H).data;
+    let opaque = 0;
+    for(let y=0; y<H; y+=step){
+      const row = y*W*4;
+      for(let x=0; x<W; x+=step){
+        const a = img[row + x*4 + 3];
+        if(a>10) opaque++;
+      }
+    }
+    return opaque;
+  }
+
+  function erasedRatio(){
+    const cur = countOpaque();
+    const ratioCleared = 1 - (cur / initialOpaque);
+    return ratioCleared;
+  }
+
+  function openCloud(){
+  if(open) return;
+  open = true;
+  document.documentElement.style.overflow='hidden';
+  document.body.style.overscrollBehavior='contain';
+
+  // 재오픈 대비 초기화
+  overlay.classList.remove('leaving');
+  overlay.style.opacity = '';
+  dim.style.opacity = '';
+
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
+  hint.classList.remove('hide');
+
+  dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+  resize();
+  drawClouds();
+}
+
+  function closeCloud(duration = 900){
+  if(!open) return;
+  open = false;
+  drawing = false;
+  hint.classList.add('hide');
+
+  // 부드러운 전환 시작: overlay는 페이드, 캔버스는 블러, dim은 서서히 사라짐
+  overlay.classList.add('leaving');
+
+  // overlay가 show 상태인 동안 opacity만 0으로 내려 자연스럽게 배경으로 이어지게 함
+  overlay.style.transition = `opacity ${duration}ms cubic-bezier(.22,.61,.36,1)`;
+
+  // 다음 프레임에 실제 페이드 트리거
+  requestAnimationFrame(()=>{
+    overlay.style.opacity = '0';
+    dim.style.opacity = '0';
+  });
+
+  // 전환 종료 후 완전 정리
+  const onEnd = ()=>{
+    overlay.removeEventListener('transitionend', onEnd);
+    overlay.classList.remove('leaving','show');
+    overlay.style.transition = '';
+    overlay.style.opacity = '';
+    dim.style.opacity = '';
+    overlay.setAttribute('aria-hidden','true');
+    document.documentElement.style.overflow='';
+    document.body.style.overscrollBehavior='';
+    // 다음 오픈 시 새로 그리도록 캔버스 정리
+    ctx.clearRect(0,0,W,H);
+  };
+  overlay.addEventListener('transitionend', onEnd, { once:true });
+}
+
+
+  function eraseAt(x,y){
+    // 화면 좌표 → 캔버스 좌표(dpr 보정)
+    const rect = canvas.getBoundingClientRect();
+    const cx = (x - rect.left) * dpr;
+    const cy = (y - rect.top)  * dpr;
+
+    // 브러시: 둥근 지우개 + 약간의 라이트
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineCap = ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+    ctx.lineWidth = ERASE_RADIUS * dpr * 2;
+
+    // 직전 포인트와 부드럽게 연결
+    ctx.beginPath();
+    ctx.moveTo(lastX||cx, lastY||cy);
+    ctx.lineTo(cx, cy);
+    ctx.stroke();
+
+    // 중심 펀치로 조금 더 강하게
+    const r = ERASE_RADIUS * dpr * 0.9;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    // 미세한 광택(지우는 순간 살짝 번쩍)
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glow = ctx.createRadialGradient(cx,cy,0, cx,cy, r*1.4);
+    glow.addColorStop(0,'rgba(255,255,255,.08)');
+    glow.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx,cy,r*1.4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    lastX=cx; lastY=cy;
+
+    // 성능을 위해 체크는 큐에 1프레임만 올림
+    if(!erasedCheckQueued){
+      erasedCheckQueued=true;
+      requestAnimationFrame(()=>{
+        erasedCheckQueued=false;
+        const ratio = erasedRatio();
+        if(ratio >= CLOSE_RATIO) closeCloud(900); // 숫자로 페이드 시간 조절 가능
+      });
+    }
+  }
+
+  // 이벤트 바인딩
+  trigger.addEventListener('click', (e)=>{ e.stopPropagation(); openCloud(); });
+
+  window.addEventListener('resize', ()=>{
+    if(!open) return;
+    resize(); drawClouds(); // 리사이즈 시 구름 재생성
+  }, {passive:true});
+
+  overlay.addEventListener('wheel', (e)=>{
+    if(!open) return;
+    e.preventDefault();
+    hint.classList.add('hide');
+    // 휠도 지우개처럼 사용 (연속 점 찍기)
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX ?? (rect.left + rect.width/2);
+    const y = e.clientY ?? (rect.top  + rect.height/2);
+    eraseAt(x,y);
+  }, {passive:false});
+
+  overlay.addEventListener('pointerdown', (e)=>{
+    if(!open) return;
+    drawing=true; hint.classList.add('hide');
+    lastX=lastY=0;
+    eraseAt(e.clientX, e.clientY);
+    canvas.setPointerCapture?.(e.pointerId);
+    e.preventDefault?.();
+  }, {passive:false});
+
+  window.addEventListener('pointermove', (e)=>{
+    if(!open || !drawing) return;
+    eraseAt(e.clientX, e.clientY);
+  }, {passive:false});
+
+  window.addEventListener('pointerup', (e)=>{
+    if(!open) return;
+    drawing=false; canvas.releasePointerCapture?.(e.pointerId);
+  }, {passive:true});
+
+  window.addEventListener('keydown', (e)=>{
+    if(open && e.key==='Escape') closeCloud();
+  });
+})();
+
+</script>
+</body>
+</html>

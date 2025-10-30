@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Sleep – Intro</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Caveat:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --text:#f5f5f5;
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --fade-in:1800ms;
+    --fade-out:1800ms;
+    --zoom:1600ms;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden;background:#000;color:var(--text);font-family:"Noto Sans KR",sans-serif;}
+
+  /* ===== 배경 ===== */
+  .stage{
+    position:fixed; inset:0;
+    transform:scale(1);
+    transition:transform var(--zoom) var(--ease), filter 800ms var(--ease);
+    will-change:transform,filter;
+  }
+  video{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    filter:brightness(1.15); transition:filter 800ms var(--ease);
+  }
+
+  /* 비네팅 */
+  .vignette{
+    position:fixed; inset:0; pointer-events:none; z-index:1;
+    background: radial-gradient(60% 60% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.6) 100%);
+    opacity:.5; transition:opacity 260ms ease;
+  }
+
+  /* 페이드용 */
+  .veil{
+    position:fixed; inset:0; background:#000; z-index:2; pointer-events:none;
+    opacity:1; transition:opacity var(--fade-in) var(--ease);
+  }
+  .veil.reveal{ opacity:0; }
+  .veil.blackout{ transition:opacity var(--fade-out) var(--ease); opacity:1; }
+
+  /* 하단 텍스트 */
+  .chip{
+    position:fixed; left:50%; bottom:4.5vh; transform:translateX(-50%);
+    z-index:3; background:#0b0b0bcc; color:#fff;
+    font-weight:700; font-size:clamp(13px,2.4vmin,23px);
+    padding:.55rem 1rem; border-radius:999px;
+    box-shadow:0 8px 24px #000a, inset 0 0 0 1px #ffffff22;
+    opacity:0; translate:0 10px;
+    transition:opacity .5s var(--ease), translate .5s var(--ease);
+  }
+  .chip.show{ opacity:1; translate:0; }
+
+  /* 중앙 문구 */
+  .finalWrap{position:fixed;inset:0;z-index:5;display:grid;place-items:center;pointer-events:none;}
+  .final{color:#fff;font-size:clamp(20px,4vmin,34px);opacity:0;transition:opacity 1000ms var(--ease);}
+  .final.show{opacity:1;}
+  .caret{display:inline-block;width:.6ch;animation:blink 1s step-end infinite;}
+  @keyframes blink{50%{opacity:0}}
+
+  /* 흰 원 커서 */
+  #fxCursor{
+    position:fixed;left:-9999px;top:-9999px;
+    width:var(--cursor-size,120px);height:var(--cursor-size,120px);
+    border-radius:50%;background:#fff;mix-blend-mode:difference;
+    pointer-events:none;z-index:10000;transform:translate(-50%,-50%);
+    opacity:0;transition:opacity .2s ease,transform .12s ease;
+  }
+  #fxCursor::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid #fff;opacity:.85;}
+  body.cursor-on #fxCursor{opacity:1;}
+  #fxCursor.is-down{transform:translate(-50%,-50%) scale(.93);}
+  @media(hover:none),(pointer:coarse){#fxCursor{display:none}}
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage">
+    <video id="bg" autoplay muted loop playsinline preload="auto">
+      <source src="passage.mp4" type="video/mp4" />
+    </video>
+  </div>
+  <div class="vignette" id="vignette"></div>
+  <div class="veil" id="veil"></div>
+
+  <div class="chip" id="chip">click to enter</div>
+
+  <div class="finalWrap"><div class="final" id="final"></div></div>
+
+  <div class="blocker" id="blocker" style="position:fixed;inset:0;z-index:6;"></div>
+
+  <div id="fxCursor"></div>
+
+<script>
+/* ===== 초기 페이드 ===== */
+const veil=document.getElementById('veil');
+const chip=document.getElementById('chip');
+const stage=document.getElementById('stage');
+const bg=document.getElementById('bg');
+const finalEl=document.getElementById('final');
+const blocker=document.getElementById('blocker');
+
+let clicks=0;
+const SCALES=[1.18,1.45,1.8];
+const OVERSHOOT=1.04;
+
+bg.addEventListener('loadeddata',()=>{
+  requestAnimationFrame(()=>veil.classList.add('reveal'));
+  setTimeout(()=>chip.classList.add('show'),700);
+},{once:true});
+
+function burstTo(target){
+  stage.style.filter=`brightness(${2.1-target})`; // 확대될수록 어두워짐
+  stage.style.transform=`scale(${target*OVERSHOOT})`;
+  setTimeout(()=>stage.style.transform=`scale(${target})`,120);
+}
+
+function typeOut(el,text,speed=55,doneCb){
+  el.textContent="";el.classList.add('show');
+  let i=0;
+  const caret=document.createElement('span');
+  caret.className='caret';caret.textContent='│';
+  el.appendChild(caret);
+  const timer=setInterval(()=>{
+    if(i<text.length){caret.before(document.createTextNode(text[i++]));}
+    else{clearInterval(timer);setTimeout(()=>doneCb&&doneCb(),350);}
+  },speed);
+}
+
+function advance(){
+  if(clicks<2){
+    burstTo(SCALES[clicks]);
+    clicks++;
+    return;
+  }
+  // 마지막 단계
+  burstTo(SCALES[2]);
+  veil.classList.remove('reveal');
+  veil.style.opacity=0;
+  setTimeout(()=>veil.classList.add('blackout'),800);
+
+  // 타이핑
+  setTimeout(()=>{
+    typeOut(finalEl,"You fall asleep...",60,()=>{
+      finalEl.style.transition="opacity 1800ms var(--ease)";
+      finalEl.style.opacity=0; // 완전히 사라짐
+      setTimeout(()=>window.location.assign("Sleep Simulator.html"),2000);
+    });
+  },700);
+  blocker.style.pointerEvents='none';
+}
+
+blocker.addEventListener('click',advance);
+window.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')advance();});
+
+/* ===== 커서 ===== */
+(()=>{
+  const cursor=document.getElementById('fxCursor');
+  let x=-9999,y=-9999,cx=x,cy=y;const ease=0.18;
+  window.addEventListener('mousemove',e=>{x=e.clientX;y=e.clientY;document.body.classList.add('cursor-on');});
+  window.addEventListener('mouseleave',()=>{document.body.classList.remove('cursor-on');x=y=-9999;});
+  window.addEventListener('mousedown',()=>cursor.classList.add('is-down'));
+  window.addEventListener('mouseup',()=>cursor.classList.remove('is-down'));
+  function tick(){cx+=(x-cx)*ease;cy+=(y-cy)*ease;cursor.style.left=cx+'px';cursor.style.top=cy+'px';requestAnimationFrame(tick);}requestAnimationFrame(tick);
+})();
+
+/* ===== 커서 크기 휠로 조절 ===== */
+window.addEventListener('wheel', (e)=>{
+  if(e.ctrlKey) return; // Ctrl+Wheel 줌 방지
+  const root = document.documentElement;
+  const cur = parseFloat(getComputedStyle(root).getPropertyValue('--cursor-size')) || 120;
+  const next = Math.max(60, Math.min(280, cur + (e.deltaY > 0 ? -10 : 10))); // 스크롤 방향에 따라 커짐/작아짐
+  root.style.setProperty('--cursor-size', next + 'px');
+}, {passive:true});
+
+</script>
+</body>
+</html>
