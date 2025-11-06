@@ -12,12 +12,12 @@
     font-weight:normal; font-style:normal; font-display:swap;
   }
   :root{
-    --text:#f5f5f5; --muted:#bdbdbd; --panel:#0b0b0bcc; --ring:#ffffff22;
-    --ease:cubic-bezier(.22,.61,.36,1);
-    --sleep-ease:cubic-bezier(.22,.61,.36,1);
-    --cursor-size:120px;
-    --feather-edge:78%;
-    --orb-size: clamp(200px, 30vmin, 460px);
+      --text:#f5f5f5; --muted:#bdbdbd; --panel:#0b0b0bcc; --ring:#ffffff22;
+      --ease:cubic-bezier(.22,.61,.36,1);
+      --sleep-ease:cubic-bezier(.22,.61,.36,1);
+      --cursor-size:120px;
+      --feather-edge:78%;
+      --orb-size: clamp(200px, 30vmin, 460px);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -131,7 +131,7 @@
   .p4{left:36%;top:62%}
   .p5{left:60%;top:88%}
 
-  /* 카드 표시 */
+  /* 카드 표시 (데스크탑 hover) */
   .card-wrap:has(.orb .orb-inner:hover) .card{opacity:1;transform:translateY(0)scale(1);pointer-events:auto;}
   .card-wrap:has(.orb.p4 .orb-inner:hover) .card-p4{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1);}
   @media (max-width:700px){
@@ -145,6 +145,29 @@
   @media (max-width:700px){ .card-p5{ left: 60%; top: calc(88% + 16vmin + 3vh); transform: translateX(-50%) scale(1); } }
   .card-wrap:has(.orb.p5 .orb-inner:hover) .card-p5{ opacity:1; pointer-events:auto; transform: translate(-50%, -50%) scale(1); }
   @media (max-width:700px){ .card-wrap:has(.orb.p5 .orb-inner:hover) .card-p5{ transform: translateX(-50%) scale(1); } }
+
+  /* === 모바일 반응형 === */
+  @media (max-width: 900px){
+    :root{ --orb-size: clamp(160px, 34vw, 300px); }
+    .card{ width:min(88vw, 380px); }
+  }
+  @media (max-width: 640px){
+    :root{ --orb-size: clamp(140px, 38vw, 260px); }
+    .p1{ left:25%; top:28%; }
+    .p2{ left:75%; top:28%; }
+    .p3{ left:25%; top:58%; }
+    .p4{ left:75%; top:58%; }
+    .p5{ left:50%; top:86%; }
+
+    .card{
+      left:50% !important; top:auto !important; bottom:calc(14vh + env(safe-area-inset-bottom, 0px));
+      transform:translate(-50%,0) scale(.96) !important;
+      width:min(92vw, 420px);
+      pointer-events:none; opacity:0;
+    }
+    .card.is-open{ opacity:1; transform:translate(-50%,0) scale(1) !important; pointer-events:auto; }
+    .card-wrap:has(.orb .orb-inner:hover) .card{ opacity:0; pointer-events:none; transform:translate(-50%,0) scale(.96) !important; }
+  }
 
   /* 플래시 + 고스트 */
   #flash{ position:fixed; inset:0; z-index:12000;
@@ -236,7 +259,7 @@
         rgba(0,0,0,.88) 100%);
   }
 
-  /* ===== Alarm overlay ===== */
+  /* Alarm overlay */
   #alarmOverlay{
     position:fixed; inset:0; z-index:16000;
     display:none; align-items:center; justify-content:center;
@@ -257,103 +280,78 @@
     overflow:hidden;
   }
   #alarmOverlay.show .alarm-card{ transform:translateY(0) scale(1); opacity:1; }
-  .alarm-card.shake{
-    animation: alarm-wobble 900ms cubic-bezier(.36,.07,.19,.97) infinite;
-  }
+  .alarm-card.shake{ animation: alarm-wobble 900ms cubic-bezier(.36,.07,.19,.97) infinite; }
   @keyframes alarm-wobble{
     0%{ transform:translateY(0) rotate(0deg); }
     15%{ transform:translateY(-1px) rotate(-1.2deg); }
     30%{ transform:translateY(0.5px) rotate(.9deg); }
     45%{ transform:translateY(-1px) rotate(-.7deg); }
     60%{ transform:translateY(.5px) rotate(.6deg); }
-    100%{ transform:translateY(0) rotate(0deg); }
+    100%{ transform:translateY(0) rotate(0); }
   }
   .alarm-lock{ position:absolute; top:10px; left:50%; transform:translateX(-50%); opacity:.6; font-size:18px; }
   .alarm-label{ margin-top:14px; text-align:center; opacity:.8; font-weight:700; letter-spacing:.3px; }
   .alarm-label .ico{ margin-right:6px; }
-  .alarm-time{
-    font-size: clamp(64px, 16vmin, 140px);
-    line-height:1; text-align:center; margin:10px 0 22px;
-    font-weight:900; letter-spacing:2px;
-  }
-  .alarm-snooze{
-    display:block; width:84%; margin:0 auto 18px; height:64px;
-    border:0; border-radius:22px; background:#f29b3a; color:#000; font-weight:800;
-    box-shadow:0 8px 22px rgba(0,0,0,.45);
-    opacity:.9; cursor:not-allowed;
-  }
-  .alarm-slider{
-    width:92%; margin:0 auto; height:64px; border-radius:28px;
-    background:#1a1a1a; position:relative; user-select:none;
-    box-shadow: inset 0 0 0 1px #ffffff18, inset 0 0 30px #0008;
-  }
-  .alarm-knob{
-    position:absolute; top:50%; left:8px; transform:translateY(-50%);
-    width:56px; height:56px; border-radius:50%;
-    background:#0a0a0a; box-shadow:0 6px 22px #000a, inset 0 0 0 1px #ffffff22;
-    display:grid; place-items:center; cursor:grab;
-    transition: box-shadow .2s ease;
-  }
+  .alarm-time{ font-size: clamp(64px, 16vmin, 140px); line-height:1; text-align:center; margin:10px 0 22px; font-weight:900; letter-spacing:2px; }
+  .alarm-snooze{ display:block; width:84%; margin:0 auto 18px; height:64px; border:0; border-radius:22px; background:#f29b3a; color:#000; font-weight:800; box-shadow:0 8px 22px rgba(0,0,0,.45); opacity:.9; cursor:not-allowed; }
+  .alarm-slider{ width:92%; margin:0 auto; height:64px; border-radius:28px; background:#1a1a1a; position:relative; user-select:none; box-shadow: inset 0 0 0 1px #ffffff18, inset 0 0 30px #0008; }
+  .alarm-knob{ position:absolute; top:50%; left:8px; transform:translateY(-50%); width:56px; height:56px; border-radius:50%; background:#0a0a0a; box-shadow:0 6px 22px #000a, inset 0 0 0 1px #ffffff22; display:grid; place-items:center; cursor:grab; transition: box-shadow .2s ease; }
   .alarm-knob:active{ cursor:grabbing; box-shadow:0 10px 26px #000d, inset 0 0 0 1px #ffffff33; }
   .alarm-knob .sq{ width:18px; height:18px; border-radius:4px; background:#fff; }
-  .alarm-hint{
-    position:absolute; left:96px; right:16px; top:50%; transform:translateY(-50%);
-    color:#bdbdbd; opacity:.7; font-weight:700; letter-spacing:.3px;
-    text-transform:lowercase; pointer-events:none;
-  }
+  .alarm-hint{ position:absolute; left:96px; right:16px; top:50%; transform:translateY(-50%); color:#bdbdbd; opacity:.7; font-weight:700; letter-spacing:.3px; text-transform:lowercase; pointer-events:none; }
   .alarm-slider.done{ box-shadow:0 0 0 2px #00ffa040, inset 0 0 0 1px #00ffa040; }
-
   .alarm-slider, .alarm-knob { touch-action: none; }
-  
-  /* ===== Cloud overlay (p3) ===== */
-/* 오버레이 자체에 배경 절대 주지 말기 */
-#cloudOverlay{
-  position:fixed; inset:0; z-index:16000;
-  display:none; opacity:0; pointer-events:none;
-  background: transparent;   /* 🔑 */
-}
 
-/* show 상태 */
-#cloudOverlay.show{ display:flex; opacity:1; pointer-events:auto; }
+  /* Cloud overlay — 투명 유지 */
+  #cloudOverlay{
+    position:fixed; inset:0; z-index:16000;
+    display:none; opacity:0; pointer-events:none;
+    background: transparent;
+    transition: opacity .35s var(--ease);
+  }
+  #cloudOverlay.show{ display:flex; opacity:1; pointer-events:auto; }
+  #cloudOverlay.leaving{ opacity:0; pointer-events:none; }
+  #cloudDim{ position:absolute; inset:0; background:transparent; }
+  #cloudCanvas{ position:absolute; inset:0; width:100%; height:100%; background: transparent; }
+  .cloud-hint{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(18px,4.6vmin,44px); color:#fff; letter-spacing:.02em;
+    text-shadow:0 8px 40px rgba(0,0,0,.85); opacity:.92; transition:opacity .25s ease; pointer-events:none;
+  }
+  .cloud-hint.hide{ opacity:0; }
 
-/* 어둡게 깔던 레이어는 완전 투명으로 (혹은 아예 삭제) */
-#cloudDim{ position:absolute; inset:0; background:transparent; }  /* 🔑 */
+  /* 모바일 안정화 */
+  @media (max-width: 700px){
+    :root{ --orb-size: clamp(150px, 38vw, 260px); }
+    .card-wrap:has(.orb .orb-inner:hover) .card,
+    .card-wrap:hover .card{
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateX(-50%) translateY(8px) scale(.98) !important;
+    }
+    .card-wrap{ isolation: isolate; }
+    .card-wrap.active{ z-index: 1200; }
+    .card{
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      width: min(92vw, 480px);
+      transform: translateX(-50%) translateY(8px) scale(.98);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .card-wrap.active .card{
+      opacity: 1 !important;
+      transform: translateX(-50%) translateY(0) scale(1) !important;
+      pointer-events: auto !important;
+      transition: opacity .22s var(--ease) .02s, transform .22s var(--ease) .02s;
+    }
+    .orb .orb-inner{ touch-action: manipulation; }
+  }
 
-/* 캔버스도 배경 없음 */
-#cloudCanvas{
-  position:absolute; inset:0; width:100%; height:100%;
-  background: transparent;    /* 🔑 */
-}
-
-/* 힌트 */
-.cloud-hint{
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  font-size:clamp(18px,4.6vmin,44px); color:#fff; letter-spacing:.02em;
-  text-shadow:0 8px 40px rgba(0,0,0,.85);
-  opacity:.92; transition:opacity .25s ease;
-  pointer-events:none;
-}
-.cloud-hint.hide{ opacity:0; }
-
-
-/* 닫힘 전환을 부드럽게 */
-#cloudOverlay{
-  transition: opacity .35s var(--ease);
-}
-#cloudOverlay.leaving{
-  opacity: 0;
-  pointer-events: none;
-}
-#cloudOverlay.leaving #cloudCanvas{
-  filter: blur(8px);
-  transition: filter .85s var(--ease);
-}
-#cloudOverlay.leaving #cloudDim{
-  opacity: 0;
-  transition: opacity .85s var(--ease);
-}
-
-
+  #centerCat, #centerCat img,
+  #cloudOverlay, #cloudCanvas { touch-action: none; }
+  body.is-cat-open, #cloudOverlay.show ~ body { overscroll-behavior: contain; }
 </style>
 </head>
 <body>
@@ -464,7 +462,7 @@ and the dream thins to light.</p>
 <div id="eyelidBot" class="eyelid" aria-hidden="true"></div>
 <div id="sleepHint" aria-hidden="true">Click to wake her up</div>
 
-<!-- ===== Alarm Overlay (HTML) ===== -->
+<!-- Alarm Overlay -->
 <div id="alarmOverlay" aria-hidden="true">
   <div class="alarm-dim"></div>
   <div class="alarm-card">
@@ -479,13 +477,12 @@ and the dream thins to light.</p>
   </div>
 </div>
 
-<!-- ===== Cloud Overlay (p3) ===== -->
+<!-- Cloud Overlay (p3) -->
 <div id="cloudOverlay" aria-hidden="true">
   <div id="cloudDim"></div>
   <canvas id="cloudCanvas"></canvas>
   <div class="cloud-hint">Brush away the clouds</div>
 </div>
-
 
 <!-- 사운드 -->
 <audio id="sfx-window" src="sound/window.mp3"   preload="auto"></audio>
@@ -517,19 +514,31 @@ el.style.setProperty('--dx',dx+'vmin');el.style.setProperty('--dy',dy+'vmin');
 const img=el.querySelector('img');if(img)img.style.setProperty('--rot',`${Math.round(rnd(-3,3))}deg`);
 setTimeout(()=>move(el),(d+rnd(.6,1.2))*1000);} orbs.forEach(el=>setTimeout(()=>move(el),rnd(100,900)));})();
 
-/* ===== :has() 폴백 ===== */
-(()=>{const supportsHas=CSS.supports?.('selector(:has(*))'); if(supportsHas)return;
+/* ===== :has() 폴백 + 터치 토글 ===== */
+(()=>{const supportsHas=CSS.supports?.('selector(:has(*))');
 document.querySelectorAll('.card-wrap').forEach(w=>{
   const inner=w.querySelector('.orb .orb-inner'); const card=w.querySelector('.card'); if(!inner||!card)return;
-  const isP4=card.classList.contains('card-p4'); const isP5=card.classList.contains('card-p5'); const mm=matchMedia('(max-width:700px)');
-  function enter(){ card.style.opacity=1;
-    if(isP4||isP5){ card.style.transform=mm.matches?'translateX(-50%) scale(1)':'translate(-50%,-50%) scale(1)'; }
-    else{ card.style.transform='translateY(0) scale(1)'; }
-    card.style.pointerEvents='auto';
+  if(!supportsHas){
+    const isP4=card.classList.contains('card-p4'); const isP5=card.classList.contains('card-p5'); const mm=matchMedia('(max-width:700px)');
+    function enter(){ card.style.opacity=1;
+      if(isP4||isP5){ card.style.transform=mm.matches?'translateX(-50%) scale(1)':'translate(-50%,-50%) scale(1)'; }
+      else{ card.style.transform='translateY(0) scale(1)'; }
+      card.style.pointerEvents='auto';
+    }
+    function leave(){ card.style.opacity=''; card.style.transform=''; card.style.pointerEvents='none'; }
+    inner.addEventListener('mouseenter',enter); inner.addEventListener('mouseleave',leave);
   }
-  function leave(){ card.style.opacity=''; card.style.transform=''; card.style.pointerEvents='none'; }
-  inner.addEventListener('mouseenter',enter); inner.addEventListener('mouseleave',leave);
-});})();
+  inner.addEventListener('click', (e)=>{
+    if(!matchMedia('(max-width:640px)').matches) return;
+    e.stopPropagation();
+    document.querySelectorAll('.card.is-open').forEach(c=>c.classList.remove('is-open'));
+    card.classList.add('is-open');
+  });
+});
+document.addEventListener('click', ()=>{
+  if(!matchMedia('(max-width:640px)').matches) return;
+  document.querySelectorAll('.card.is-open').forEach(c=>c.classList.remove('is-open'));
+}, {capture:true});})();
 
 /* ===== 네비 토글 ===== */
 (()=>{const btn=document.getElementById('menuBtn'),nav=document.getElementById('navPanel');if(!btn||!nav)return;
@@ -626,76 +635,149 @@ function playWindowBirdSfx(){
   }
 }
 
-/* ===== 중앙 고양이 ===== */
-(()=> {
+/* ===== 중앙 고양이 (단일 모듈) ===== */
+(() => {
+  const IS_TOUCH = matchMedia('(hover:none), (pointer:coarse)').matches;
+  const IS_MOUSE = matchMedia('(hover:hover) and (pointer:fine)').matches;
+
   const catTrigger = document.querySelector('.orb.p1 .orb-inner');
   const dim        = document.getElementById('catDim');
   const catWrap    = document.getElementById('centerCat');
   const imgEl      = document.getElementById('centerCatImg');
   const meow       = document.getElementById('sfx-meow');
   const purr       = document.getElementById('sfx-purr');
-
-  if (!catTrigger || !dim || !catWrap || !imgEl) return;
+  if (!catTrigger || !dim || !catWrap || !imgEl || !purr) return;
 
   const OPEN_SRC  = 'image/cat_blink11.png';
   const BLINK_SRC = 'image/cat_blink22.png';
 
-  let isOpen=false, blinkTimer=null, strokeCount=0, lastX=null, travel=0, purrStopTimer=null;
+  let isOpen = false;
+  let strokeCount = 0;
+  let travel = 0;
+  let purrStopTimer = null;
+  let blinkTimer = null;
+
+  // 터치
+  let touchActive = false;
+  let lastXTouch = null;
+
+  // 마우스
+  let mouseOver = false;
+  let lastXMouse = null;
+
+  function accumulateStroke(dx) {
+    travel += dx;
+    const THRESH = 120;
+    if (travel >= THRESH) {
+      travel = 0;
+      strokeCount++;
+      try {
+        purr.currentTime = 0;
+        purr.volume = 0.9;
+        purr.play().catch(()=>{});
+        clearTimeout(purrStopTimer);
+        purrStopTimer = setTimeout(() => {
+          try { purr.pause(); purr.currentTime = 0; } catch(_){}
+        }, 2000);
+      } catch (_){}
+      if (strokeCount >= 60) closeCat();
+    }
+  }
 
   function startBlinkLoop(){
     stopBlinkLoop();
-    const tick = ()=>{
-      if(!isOpen) return;
-      const delay = 800 + Math.random()*1400;
-      blinkTimer=setTimeout(()=>{
-        imgEl.src=BLINK_SRC;
-        setTimeout(()=>{ if(isOpen){ imgEl.src=OPEN_SRC; tick(); } },120);
+    const tick = () => {
+      if (!isOpen) return;
+      const delay = 800 + Math.random() * 1400;
+      blinkTimer = setTimeout(() => {
+        imgEl.src = BLINK_SRC;
+        setTimeout(() => {
+          if (isOpen) { imgEl.src = OPEN_SRC; tick(); }
+        }, 120);
       }, delay);
     };
-    imgEl.src=OPEN_SRC; tick();
+    imgEl.src = OPEN_SRC;
+    tick();
   }
-  function stopBlinkLoop(){ clearTimeout(blinkTimer); blinkTimer=null; }
+  function stopBlinkLoop(){ clearTimeout(blinkTimer); blinkTimer = null; }
 
   function openCat(){
-    if(isOpen) return;
-    isOpen=true; strokeCount=0; travel=0; lastX=null;
+    if (isOpen) return;
+    isOpen = true; strokeCount = 0; travel = 0; lastXTouch = null; lastXMouse = null;
     document.body.classList.add('is-cat-open');
     dim.classList.add('show');
-    catWrap.style.display='flex'; void catWrap.offsetWidth;
+    catWrap.style.display = 'flex'; void catWrap.offsetWidth;
     catWrap.classList.add('show'); catWrap.setAttribute('aria-hidden','false');
-    try{ meow.currentTime=0; meow.volume=0.9; meow.play(); }catch(_){}
+    try { meow.currentTime = 0; meow.volume = 0.9; meow.play(); } catch(_){}
     startBlinkLoop();
   }
   function closeCat(){
-    if(!isOpen) return;
-    isOpen=false; stopBlinkLoop();
+    if (!isOpen) return;
+    isOpen = false; stopBlinkLoop();
     catWrap.classList.remove('show'); catWrap.setAttribute('aria-hidden','true');
-    catWrap.addEventListener('transitionend', ()=>{ if(!isOpen) catWrap.style.display='none'; }, {once:true});
-    setTimeout(()=>{ if(!isOpen) catWrap.style.display='none'; }, 650);
-    try{ purr.pause(); purr.currentTime=0; }catch(_){}
+    catWrap.addEventListener('transitionend', () => { if (!isOpen) catWrap.style.display = 'none'; }, {once:true});
+    setTimeout(() => { if (!isOpen) catWrap.style.display = 'none'; }, 650);
+    try { purr.pause(); purr.currentTime = 0; } catch(_){}
     clearTimeout(purrStopTimer);
     dim.classList.remove('show');
     document.body.classList.remove('is-cat-open');
+    touchActive = false; mouseOver = false; lastXTouch = null; lastXMouse = null;
   }
 
-  catTrigger.addEventListener('click', e=>{ e.stopPropagation(); openCat(); });
+  catTrigger.addEventListener('click', (e) => { e.stopPropagation(); openCat(); });
+  dim.addEventListener('click', closeCat);
 
-  catWrap.addEventListener('pointermove', ev=>{
-    if(!isOpen) return;
-    const x = ev.clientX ?? ev.touches?.[0]?.clientX; if(x==null) return;
-    if(lastX==null){ lastX=x; return; }
-    const dx=Math.abs(x-lastX); lastX=x; travel+=dx;
-    const THRESH=120;
-    if(travel>=THRESH){
-      travel=0; strokeCount++;
-      try{
-        purr.currentTime=0; purr.volume=0.9; purr.play().catch(()=>{});
-        clearTimeout(purrStopTimer);
-        purrStopTimer=setTimeout(()=>{ try{ purr.pause(); purr.currentTime=0; }catch(_){} },2000);
-      }catch(_){}
-      if(strokeCount>=60){ closeCat(); }
-    }
-  }, {passive:true});
+  // 터치/펜: 눌러서 문지르기
+  if (IS_TOUCH) {
+    catWrap.addEventListener('pointerdown', (ev) => {
+      if (!isOpen) return;
+      touchActive = true;
+      lastXTouch = ev.clientX;
+      travel = 0;
+      catWrap.setPointerCapture?.(ev.pointerId);
+      ev.preventDefault?.();
+    }, { passive:false });
+
+    catWrap.addEventListener('pointermove', (ev) => {
+      if (!isOpen || !touchActive) return;
+      const x = ev.clientX;
+      if (lastXTouch == null) { lastXTouch = x; return; }
+      const dx = Math.abs(x - lastXTouch);
+      lastXTouch = x;
+      accumulateStroke(dx);
+    }, { passive:false });
+
+    catWrap.addEventListener('pointerup', (ev) => {
+      touchActive = false;
+      catWrap.releasePointerCapture?.(ev.pointerId);
+    }, { passive:true });
+  }
+
+  // 마우스: 클릭 없이 흔들기만 해도 인식
+  if (IS_MOUSE) {
+    catWrap.addEventListener('mouseenter', () => {
+      if (!isOpen) return;
+      mouseOver = true;
+      lastXMouse = null;
+    });
+    catWrap.addEventListener('mouseleave', () => {
+      mouseOver = false;
+      lastXMouse = null;
+    });
+    catWrap.addEventListener('mousemove', (ev) => {
+      if (!isOpen || !mouseOver) return;
+      const x = ev.clientX;
+      if (lastXMouse == null) { lastXMouse = x; return; }
+      const dx = Math.abs(x - lastXMouse);
+      lastXMouse = x;
+      if (dx < 0.5) return; // 미세 떨림 무시
+      accumulateStroke(dx);
+    }, { passive:true });
+  }
+
+  // 필요 시 외부에서 접근 가능
+  window.openCat  = openCat;
+  window.closeCat = closeCat;
 })();
 
 /* ===== Sleep FX (p4) ===== */
@@ -820,7 +902,6 @@ function playWindowBirdSfx(){
   const tone    = document.getElementById('sfx-alarmTone');
   const vib     = document.getElementById('sfx-vibration');
 
-  // 필수 요소만 체크 (사운드 없으면 무음으로 동작)
   if(!trigger || !overlay || !card || !timeEl || !slider || !knob) return;
 
   const TIMES = ["08:00","08:30","09:00"];
@@ -829,7 +910,7 @@ function playWindowBirdSfx(){
   function layout(){
     const s = slider.getBoundingClientRect();
     const k = knob.getBoundingClientRect();
-    maxLeft = s.width - k.width - 8; // 8px 패딩
+    maxLeft = s.width - k.width - 8;
   }
 
   function playSounds(){
@@ -862,7 +943,6 @@ function playWindowBirdSfx(){
     card.classList.add('shake');
     slider.classList.remove('done');
 
-    // 다음 프레임에서 실제 폭 계산 후 초기화
     requestAnimationFrame(()=>{
       layout();
       knob.style.left = '8px';
@@ -930,11 +1010,11 @@ function playWindowBirdSfx(){
   trigger.addEventListener('click', (e)=>{
     e.stopPropagation();
     step = 0;
-    show(TIMES[step]); // 08:00
+    show(TIMES[step]);
   });
-})(); // ★ 즉시실행 꼭 필요!
+})();
 
-/* ===== Cloud sequence (p3): paint clouds, erase with mouse, auto-close ===== */
+/* ===== Cloud sequence (p3) ===== */
 (function(){
   const trigger = document.querySelector('.orb.p3 .orb-inner');
   const overlay = document.getElementById('cloudOverlay');
@@ -949,9 +1029,9 @@ function playWindowBirdSfx(){
   let open=false, drawing=false;
   let lastX=0, lastY=0;
   let erasedCheckQueued=false;
-  let initialOpaque=1;          // 시작시 알파>0 픽셀 수
-  const CLOSE_RATIO = 0.62;     // 이 비율 이상 지우면 자동 종료
-  const ERASE_RADIUS = 60;      // CSS px 기준(캔버스에서는 *dpr)
+  let initialOpaque=1;
+  const CLOSE_RATIO = 0.62;
+  const ERASE_RADIUS = 60;
 
   function resize(){
     const bb = overlay.getBoundingClientRect();
@@ -964,18 +1044,16 @@ function playWindowBirdSfx(){
 
   function rnd(a,b){ return Math.random()*(b-a)+a; }
 
-  // 부드러운 구름 질감 생성: 라디얼 그라디언트 버블을 많이 겹침
   function drawClouds(){
     ctx.clearRect(0,0,W,H);
-    // 약간 푸른 빛 섞인 흰 안개 느낌
-    const layers = 3; // 레이어 수
+    const layers = 3;
     for(let L=0; L<layers; L++){
-      const count = Math.round((W*H)/ (13000/dpr) * (0.30 + 0.25*L)); // 화면 크기 비례
+      const count = Math.round((W*H)/ (13000/dpr) * (0.30 + 0.25*L));
       for(let i=0;i<count;i++){
         const x = rnd(0, W), y = rnd(0, H);
         const r = rnd(120*dpr, 340*dpr) * (1 + L*0.25);
         const g = ctx.createRadialGradient(x,y, r*0.1, x,y, r);
-        const a = 0.06 + 0.045*L; // 중심부 투명도
+        const a = 0.06 + 0.045*L;
         g.addColorStop(0.00, `rgba(255,255,255,${a*1.00})`);
         g.addColorStop(0.35, `rgba(255,255,255,${a*0.70})`);
         g.addColorStop(1.00, `rgba(255,255,255,0)`);
@@ -984,19 +1062,16 @@ function playWindowBirdSfx(){
         ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
       }
     }
-    // 가장자리 비네트로 중앙 집중
     const vg = ctx.createRadialGradient(W*0.5,H*0.5, Math.min(W,H)*0.2, W*0.5,H*0.5, Math.hypot(W,H)*0.55);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
     vg.addColorStop(1, 'rgba(0,0,0,0.25)');
     ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
 
-    // 시작시 남은 알파 픽셀 수 계산
     initialOpaque = countOpaque();
   }
 
   function countOpaque(){
-    // 샘플링 비용 줄이기 위해 간격 샘플링 (2x2 스텝)
-    const step = 2; // dpr 캔버스 기준
+    const step = 2;
     const img = ctx.getImageData(0,0,W,H).data;
     let opaque = 0;
     for(let y=0; y<H; y+=step){
@@ -1016,85 +1091,71 @@ function playWindowBirdSfx(){
   }
 
   function openCloud(){
-  if(open) return;
-  open = true;
-  document.documentElement.style.overflow='hidden';
-  document.body.style.overscrollBehavior='contain';
+    if(open) return;
+    open = true;
+    document.documentElement.style.overflow='hidden';
+    document.body.style.overscrollBehavior='contain';
 
-  // 재오픈 대비 초기화
-  overlay.classList.remove('leaving');
-  overlay.style.opacity = '';
-  dim.style.opacity = '';
-
-  overlay.classList.add('show');
-  overlay.setAttribute('aria-hidden','false');
-  hint.classList.remove('hide');
-
-  dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-  resize();
-  drawClouds();
-}
-
-  function closeCloud(duration = 900){
-  if(!open) return;
-  open = false;
-  drawing = false;
-  hint.classList.add('hide');
-
-  // 부드러운 전환 시작: overlay는 페이드, 캔버스는 블러, dim은 서서히 사라짐
-  overlay.classList.add('leaving');
-
-  // overlay가 show 상태인 동안 opacity만 0으로 내려 자연스럽게 배경으로 이어지게 함
-  overlay.style.transition = `opacity ${duration}ms cubic-bezier(.22,.61,.36,1)`;
-
-  // 다음 프레임에 실제 페이드 트리거
-  requestAnimationFrame(()=>{
-    overlay.style.opacity = '0';
-    dim.style.opacity = '0';
-  });
-
-  // 전환 종료 후 완전 정리
-  const onEnd = ()=>{
-    overlay.removeEventListener('transitionend', onEnd);
-    overlay.classList.remove('leaving','show');
-    overlay.style.transition = '';
+    overlay.classList.remove('leaving');
     overlay.style.opacity = '';
     dim.style.opacity = '';
-    overlay.setAttribute('aria-hidden','true');
-    document.documentElement.style.overflow='';
-    document.body.style.overscrollBehavior='';
-    // 다음 오픈 시 새로 그리도록 캔버스 정리
-    ctx.clearRect(0,0,W,H);
-  };
-  overlay.addEventListener('transitionend', onEnd, { once:true });
-}
 
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden','false');
+    hint.classList.remove('hide');
+
+    dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+    resize();
+    drawClouds();
+  }
+
+  function closeCloud(duration = 900){
+    if(!open) return;
+    open = false;
+    drawing = false;
+    hint.classList.add('hide');
+
+    overlay.classList.add('leaving');
+    overlay.style.transition = `opacity ${duration}ms cubic-bezier(.22,.61,.36,1)`;
+    requestAnimationFrame(()=>{
+      overlay.style.opacity = '0';
+      dim.style.opacity = '0';
+    });
+
+    const onEnd = ()=>{
+      overlay.removeEventListener('transitionend', onEnd);
+      overlay.classList.remove('leaving','show');
+      overlay.style.transition = '';
+      overlay.style.opacity = '';
+      dim.style.opacity = '';
+      overlay.setAttribute('aria-hidden','true');
+      document.documentElement.style.overflow='';
+      document.body.style.overscrollBehavior='';
+      ctx.clearRect(0,0,W,H);
+    };
+    overlay.addEventListener('transitionend', onEnd, { once:true });
+  }
 
   function eraseAt(x,y){
-    // 화면 좌표 → 캔버스 좌표(dpr 보정)
     const rect = canvas.getBoundingClientRect();
     const cx = (x - rect.left) * dpr;
     const cy = (y - rect.top)  * dpr;
 
-    // 브러시: 둥근 지우개 + 약간의 라이트
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
     ctx.lineCap = ctx.lineJoin = 'round';
     ctx.strokeStyle = 'rgba(0,0,0,1)';
     ctx.lineWidth = ERASE_RADIUS * dpr * 2;
 
-    // 직전 포인트와 부드럽게 연결
     ctx.beginPath();
     ctx.moveTo(lastX||cx, lastY||cy);
     ctx.lineTo(cx, cy);
     ctx.stroke();
 
-    // 중심 펀치로 조금 더 강하게
     const r = ERASE_RADIUS * dpr * 0.9;
     ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
     ctx.restore();
 
-    // 미세한 광택(지우는 순간 살짝 번쩍)
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     const glow = ctx.createRadialGradient(cx,cy,0, cx,cy, r*1.4);
@@ -1105,60 +1166,74 @@ function playWindowBirdSfx(){
 
     lastX=cx; lastY=cy;
 
-    // 성능을 위해 체크는 큐에 1프레임만 올림
     if(!erasedCheckQueued){
       erasedCheckQueued=true;
       requestAnimationFrame(()=>{
         erasedCheckQueued=false;
         const ratio = erasedRatio();
-        if(ratio >= CLOSE_RATIO) closeCloud(900); // 숫자로 페이드 시간 조절 가능
+        if(ratio >= CLOSE_RATIO) closeCloud(900);
       });
     }
   }
 
-  // 이벤트 바인딩
   trigger.addEventListener('click', (e)=>{ e.stopPropagation(); openCloud(); });
 
-  window.addEventListener('resize', ()=>{
-    if(!open) return;
-    resize(); drawClouds(); // 리사이즈 시 구름 재생성
-  }, {passive:true});
+  window.addEventListener('resize', ()=>{ if(!open) return; resize(); drawClouds(); }, {passive:true});
 
   overlay.addEventListener('wheel', (e)=>{
     if(!open) return;
     e.preventDefault();
     hint.classList.add('hide');
-    // 휠도 지우개처럼 사용 (연속 점 찍기)
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX ?? (rect.left + rect.width/2);
     const y = e.clientY ?? (rect.top  + rect.height/2);
     eraseAt(x,y);
   }, {passive:false});
 
-  overlay.addEventListener('pointerdown', (e)=>{
-    if(!open) return;
-    drawing=true; hint.classList.add('hide');
-    lastX=lastY=0;
+  overlay.addEventListener('pointerdown', (e) => {
+    if (!open) return;
+    drawing = true;
+    hint.classList.add('hide');
+    lastX = lastY = 0;
+    (e.target.setPointerCapture?.(e.pointerId));
     eraseAt(e.clientX, e.clientY);
-    canvas.setPointerCapture?.(e.pointerId);
     e.preventDefault?.();
-  }, {passive:false});
+  }, { passive:false });
 
   window.addEventListener('pointermove', (e)=>{
     if(!open || !drawing) return;
     eraseAt(e.clientX, e.clientY);
   }, {passive:false});
 
-  window.addEventListener('pointerup', (e)=>{
-    if(!open) return;
-    drawing=false; canvas.releasePointerCapture?.(e.pointerId);
-  }, {passive:true});
+  window.addEventListener('pointerup', (e) => {
+    if (!open) return;
+    drawing = false;
+    canvas.releasePointerCapture?.(e.pointerId);
+  }, { passive:true });
 
-  window.addEventListener('keydown', (e)=>{
-    if(open && e.key==='Escape') closeCloud();
-  });
+  window.addEventListener('keydown', (e)=>{ if(open && e.key==='Escape') closeCloud(); });
 })();
 
+/* 모바일 카드 토글 보조 */
+(() => {
+  const isTouch = matchMedia('(hover:none), (pointer:coarse)').matches;
+  if (!isTouch) return;
+  const wraps = [...document.querySelectorAll('.card-wrap')];
+  let openWrap = null;
+
+  wraps.forEach(w => {
+    const inner = w.querySelector('.orb .orb-inner');
+    const card  = w.querySelector('.card');
+    if (!inner || !card) return;
+    function open() { if (openWrap && openWrap !== w) openWrap.classList.remove('active'); w.classList.add('active'); openWrap = w; }
+    function close(){ w.classList.remove('active'); if (openWrap === w) openWrap = null; }
+    inner.addEventListener('click', e => { e.stopPropagation(); w.classList.contains('active') ? close() : open(); });
+    card.addEventListener('click', e => e.stopPropagation());
+  });
+
+  document.addEventListener('click', () => { if (openWrap) { openWrap.classList.remove('active'); openWrap = null; } }, true);
+  addEventListener('resize', () => { if (openWrap) { openWrap.classList.remove('active'); openWrap = null; } }, { passive:true });
+})();
 </script>
 </body>
 </html>
