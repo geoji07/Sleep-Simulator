@@ -168,43 +168,54 @@
 
   /* ===== 모바일 전용 오버라이드 (≤700px) ===== */
   @media (max-width: 700px){
-    :root{
-      --hud-size: clamp(56px, 8.6vmin, 64px);
-      --safe-top: max(env(safe-area-inset-top, 0px), 10px);
-      --safe-right: max(env(safe-area-inset-right, 0px), 10px);
-    }
-
-    .hud{ top:calc(var(--safe-top) + 8px); right:calc(var(--safe-right) + 12px); }
-    .hud-btn{ width:var(--hud-size); height:var(--hud-size); }
-
-    .title.logo{
-      position:fixed; left:0; right:0;
-      top:calc(var(--safe-top) + 4vh); /* 더 위로 */
-      display:grid; place-items:center;
-      font-size:clamp(26px, 8.2vmin, 48px);
-    }
-
-    .stage{ position:fixed; inset:0; pointer-events:auto; }
-
-    /* 세로 스택 & 가로 넘침 방지 */
-    .obj{
-      left:50% !important;
-      transform:translateX(-50%) !important;
-      width:clamp(150px, 46vw, 280px);
-      animation:none !important;
-    }
-    .obj img{
-      animation: floatY_m 8s ease-in-out infinite alternate,
-                 floatX_m 11s ease-in-out infinite alternate;
-    }
-    @keyframes floatY_m{ 0%{ transform:translateY(-0.6vh) } 100%{ transform:translateY(0.6vh) } }
-    @keyframes floatX_m{ 0%{ transform:translateX(-0.3vw) } 100%{ transform:translateX(0.3vw) } }
-
-    /* 원하는 높이로 세로 배치(상단으로 당김) */
-    .o1{ top: 16vh !important; }
-    .o2{ top: 36vh !important; }
-    .o3{ top: 56vh !important; }
+  :root{
+    --hud-size: clamp(56px, 8.6vmin, 64px);
+    --safe-top: max(env(safe-area-inset-top, 0px), 8px);
+    --lift: 6vh;            /* ← 위로 당기는 양(원하면 4~10vh로 조절) */
   }
+
+  /* 주소창 포함/미포함 환경 모두 커버 */
+  .container{ height: calc(var(--vh, 1vh) * 100); }
+  #bgVideo{   height: calc(var(--vh, 1vh) * 100); }
+  @supports (height: 100svh){
+    .container{ height: 100svh; }
+    #bgVideo{   height: 100svh; }
+  }
+
+  /* HUD 그대로 */
+  .hud{ top: calc(var(--safe-top) + 6px); right:12px; }
+  .hud-btn{ width: var(--hud-size); height: var(--hud-size); }
+
+  /* 로고 더 위로 */
+  .title.logo{
+    position:fixed; left:0; right:0;
+    top: calc(var(--safe-top) + 3vh);   /* 5vh → 3vh */
+    display:grid; place-items:center;
+    font-size: clamp(26px, 8.2vmin, 48px);
+  }
+
+  /* 스테이지 자체를 위로 살짝 끌어올림 */
+  .stage{ position:fixed; inset:0; pointer-events:auto; transform: translateY(calc(-1 * var(--lift))); }
+
+  /* 가운데 정렬 + 크기 */
+  .obj{
+    left:50% !important;
+    transform: translateX(-50%) !important;
+    width: clamp(150px, 46vw, 280px);
+    animation: none !important;
+  }
+  .obj img{
+    animation: floatY_m 8s ease-in-out infinite alternate,
+               floatX_m 11s ease-in-out infinite alternate;
+  }
+  @keyframes floatY_m{ 0%{ transform:translateY(-0.6vh) } 100%{ transform:translateY(0.6vh) } }
+  @keyframes floatX_m{ 0%{ transform:translateX(-0.3vw) } 100%{ transform:translateX(0.3vw) } }
+
+  /* 세로 위치(더 위) */
+  .o1{ top: 14vh !important; }  /* 18vh → 14vh */
+  .o2{ top: 34vh !important; }  /* 40vh → 34vh */
+  .o3{ top: 54vh !important; }  /* 62vh → 54vh */
+}
 </style>
 </head>
 <body>
@@ -582,6 +593,14 @@ addEventListener('wheel',(e)=>{
   ['play','pause','volumechange','emptied','suspend','stalled'].forEach(ev=>a.addEventListener(ev,ui));
   ui();
 })();
+
+function setVH(){
+  document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+}
+setVH();
+addEventListener('resize', setVH, {passive:true});
+addEventListener('orientationchange', setVH, {passive:true});
+
 </script>
 </body>
 </html>
