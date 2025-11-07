@@ -221,6 +221,16 @@
   .o1{ top: 10vh !important; }  /* 18vh → 14vh */
   .o2{ top: 30vh !important; }  /* 40vh → 34vh */
   .o3{ top: 50vh !important; --sizeScale: .88; }  /* 62vh → 54vh */
+
+   .gap-img{
+    width: clamp(120px, 16vmin, 220px);   /* 기본보다 작게 */
+    max-height: 60vh;                     /* 세로 제한 */
+  }
+
+  /* 등장할 때의 최종 스케일도 낮춰줌 */
+  .gap-img img{
+    transform: scale(0.8); /* 0.8~0.9 사이로 조절 가능 */
+  }
 }
 </style>
 </head>
