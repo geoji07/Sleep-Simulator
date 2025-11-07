@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dream – Scene (Minimal)</title>
+<link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Reenie+Beanie&display=swap" rel="stylesheet">
+<style>
+  @font-face{
+    font-family:'Wild';
+    src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/naverfont_11@1.0/Wild.woff') format('woff');
+    font-weight:normal; font-style:normal; font-display:swap;
+  }
+  :root{
+    --text:#f5f5f5; --muted:#bdbdbd; --panel:#0b0b0bcc; --ring:#ffffff22;
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --cursor-size:120px;
+    --feather-edge:78%;
+    --orb-size: clamp(200px, 30vmin, 460px);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; overflow:hidden; background:#000; color:var(--text);
+    font-family:ui-sans-serif,system-ui,"Noto Sans KR",Apple SD Gothic Neo,Malgun Gothic;
+  }
+
+  /* 배경 */
+  .bg{
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(120% 120% at 50% 80%, rgba(0,0,0,.60), rgba(0,0,0,.88)),
+      url("image/Sleep_bg.png") center/cover no-repeat;
+    filter: brightness(.46) contrast(1.03) saturate(.98);
+  }
+
+  /* 인버트 커서 */
+  #fxCursor{
+    position:fixed; left:-9999px; top:-9999px;
+    width:var(--cursor-size); height:var(--cursor-size);
+    border-radius:50%; background:#fff; mix-blend-mode:difference;
+    pointer-events:none; z-index:999999; transform:translate(-50%,-50%);
+    opacity:0; transition:opacity .2s ease, transform .12s ease;
+  }
+  #fxCursor::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid #fff;opacity:.85}
+  body.cursor-on #fxCursor{opacity:1}
+  #fxCursor.is-down{transform:translate(-50%,-50%) scale(.93)}
+  @media (hover:none),(pointer:coarse){#fxCursor{display:none}}
+
+  /* 우상단 컨트롤 */
+  #menuBtn{
+    position: fixed; top:18px; right:18px; z-index:10000;
+    width:46px; height:46px; border-radius:18px; border:1px solid #ffffff2a; background:#0b0b0bcc;
+    box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35);
+    backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer;
+    transition: transform .22s ease, background .2s ease, box-shadow .25s ease;
+  }
+  #menuBtn:hover{ transform: scale(1.08) rotate(1.5deg); background:#0b0b0be6; box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 6px #ffffff10; }
+  #menuBtn img{ width:60%; height:60%; object-fit:contain; }
+
+  #audioBtn{
+    position: fixed; top:18px; right:74px; z-index:9998;
+    width:46px; height:46px; border-radius:999px; border:1px solid #ffffff2a; background:#0b0b0bcc;
+    box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35);
+    backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer;
+    transition: transform .22s ease, background .2s ease, box-shadow .25s ease, opacity .25s ease;
+  }
+  #audioBtn .icon{ position:absolute; width:62%; height:62%; object-fit:contain; transition: opacity .25s ease, transform .25s ease; }
+  #audioBtn .icon.sound{ opacity:1; }
+  #audioBtn .icon.mute{  opacity:0; transform: scale(.92); }
+  #audioBtn.is-muted .icon.sound{ opacity:0; transform: scale(1.08); }
+  #audioBtn.is-muted .icon.mute{  opacity:1; transform: scale(1); }
+  #audioBtn.is-playing{ box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 7px #7bd0ff20, inset 0 0 0 1px rgba(255,255,255,.4); }
+
+  /* 네비 */
+  .nav-panel{
+    position: fixed; top:12px; right:12px; z-index:9999; width: 360px; max-width: 92vw; height: calc(100vh - 24px);
+    border-radius: 28px; background: #ffffff; color:#111; box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.06);
+    display:flex; flex-direction:column; overflow:hidden; transform-origin: center right; transform: translateX(8px) scale(.98);
+    opacity:0; clip-path: inset(0 0 0 98% round 28px); pointer-events:none;
+    transition: clip-path .28s var(--ease), transform .28s var(--ease), opacity .2s ease;
+  }
+  .nav-panel.open{ clip-path: inset(0 0 0 0 round 28px); transform: translateX(0) scale(1); opacity:1; pointer-events:auto; }
+  .nav-header{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px; font-weight:900; letter-spacing:.4px; font-size:14px; color:#222; border-bottom: 1px solid rgba(0,0,0,.06); }
+  .nav-body{ padding:18px; overflow:auto; }
+  .nav-grid{ display:grid; gap:16px; }
+  .nav-btn{
+    display:flex; align-items:center; justify-content:center; height:56px; border-radius:16px; background:#fff; color:#111; font-weight:800;
+    box-shadow:0 8px 24px rgba(0,0,0,.08), 0 1px 0 rgba(0,0,0,.06), inset 0 0 0 1px rgba(0,0,0,.06);
+    transition: transform .14s ease, box-shadow .18s ease, background .18s ease; cursor:pointer; user-select:none;
+    text-decoration:none; color:inherit;
+  }
+  .nav-btn:hover{ transform: translateX(-3px); background:#f8fafc; box-shadow:0 12px 28px rgba(0,0,0,.12), 0 1px 0 rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.08); }
+  @media (max-width:600px){ .nav-panel{ width:88vw; } .nav-btn{ height:54px; border-radius:14px; } }
+
+  /* 로고 */
+  .logo{
+    position:fixed;left:26px;top:16px;z-index:10001;color:#fff;text-decoration:none;font-weight:900;
+    font-size:clamp(22px,3.4vmin,34px);letter-spacing:.02em;text-shadow:0 2px 12px #0008;user-select:none;
+  }
+
+  /* 오브 (이미지 제거, 기본 그라디언트) */
+  .orbs{position:fixed;inset:0;z-index:2;pointer-events:none}
+  .orb{
+    position:absolute; width: var(--orb-size); height: var(--orb-size);
+    transform: translate(-50%,-50%) translate(var(--dx,0),var(--dy,0));
+    transition: transform var(--t,8s) var(--ease);
+    pointer-events:none;
+  }
+  .orb-inner{
+    position:absolute; inset:0; border-radius:50%; overflow:hidden; pointer-events:auto;
+    background:
+      radial-gradient(60% 60% at 40% 38%, rgba(255,255,255,.16), rgba(255,255,255,0) 70%),
+      radial-gradient(85% 85% at 60% 62%, #1a1a1a, #0b0b0b 70%);
+    box-shadow:0 6px 26px #00000099, inset 0 0 0 0.5px #ffffff22, inset 0 0 26px #ffffff0d;
+    transform:scale(var(--hover,1));
+    transition:transform .16s cubic-bezier(.2,.8,.2,1),filter .3s var(--ease),box-shadow .3s var(--ease);
+    -webkit-mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);
+  }
+  .orb-inner:hover{
+    --hover:1.16; filter:brightness(1.06);
+    box-shadow:0 18px 46px rgba(0,0,0,.62),0 0 0 10px rgba(255,255,255,.08),inset 0 0 0 0.5px #ffffff44,inset 0 0 30px #ffffff12;
+  }
+
+  /* 오브 초기 좌표 */
+  .p1{left:14%;top:42%}
+  .p2{left:58%;top:18%}
+  .p3{left:86%;top:28%}
+  .p4{left:36%;top:62%}
+  .p5{left:60%;top:88%}
+
+  /* 반응형 사이즈 조정 */
+  @media (max-width: 900px){ :root{ --orb-size: clamp(160px, 34vw, 300px); } }
+  @media (max-width: 640px){ :root{ --orb-size: clamp(140px, 38vw, 260px); } }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<a class="logo" href="Sleep Simulator.html">SlEep</a>
+
+<!-- 오브: 이미지/카드/클릭효과 없음 -->
+<div class="orbs" id="orbs">
+  <div class="orb p1"><div class="orb-inner" aria-hidden="true"></div></div>
+  <div class="orb p2"><div class="orb-inner" aria-hidden="true"></div></div>
+  <div class="orb p3"><div class="orb-inner" aria-hidden="true"></div></div>
+  <div class="orb p4"><div class="orb-inner" aria-hidden="true"></div></div>
+  <div class="orb p5"><div class="orb-inner" aria-hidden="true"></div></div>
+</div>
+
+<!-- 컨트롤 & 네비 (그대로 유지) -->
+<button id="menuBtn" aria-label="메뉴 열기" aria-expanded="false" title="메뉴">
+  <img src="image/list.png" alt="" aria-hidden="true">
+</button>
+
+<audio id="bgm" src="dreamcore.mp3" preload="auto" loop></audio>
+<button id="audioBtn" aria-label="배경음악 켜기/끄기" aria-pressed="false" title="배경음악 켜기/끄기">
+  <img class="icon sound" src="image/sound.png" alt="" aria-hidden="true">
+  <img class="icon mute"  src="image/mute.png"  alt="" aria-hidden="true">
+</button>
+
+<nav id="navPanel" class="nav-panel" aria-hidden="true">
+  <div class="nav-header"><span>Navigate</span><span style="opacity:.55;font-weight:800;"></span></div>
+  <div class="nav-body">
+    <div class="nav-grid">
+      <a class="nav-btn" href="Sleep Simulator.html">Home</a>
+      <a class="nav-btn" href="dream.html">Dream</a>
+      <a class="nav-btn" href="nightmare.html">Nightmare</a>
+    </div>
+  </div>
+</nav>
+
+<div id="fxCursor"></div>
+
+<script>
+/* ===== 커서 최소 유지 ===== */
+(()=>{
+  const c=document.getElementById('fxCursor'),r=document.documentElement;
+  let x=-9999,y=-9999,cx=x,cy=y; const ease=.18,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  addEventListener('mousemove',e=>{x=e.clientX;y=e.clientY;document.body.classList.add('cursor-on')});
+  addEventListener('mouseleave',()=>{document.body.classList.remove('cursor-on');x=y=-9999});
+  addEventListener('mousedown',()=>c.classList.add('is-down'));
+  addEventListener('mouseup',()=>c.classList.remove('is-down'));
+  addEventListener('wheel',e=>{
+    if(e.ctrlKey)return;
+    const cur=parseFloat(getComputedStyle(r).getPropertyValue('--cursor-size'))||120;
+    const nxt=clamp(cur+(e.deltaY>0?-10:10),60,280);
+    r.style.setProperty('--cursor-size',nxt+'px')
+  },{passive:true});
+  (function t(){cx+=(x-cx)*ease;cy+=(y-cy)*ease;c.style.left=cx+'px';c.style.top=cy+'px';requestAnimationFrame(t)})();
+})();
+
+/* ===== 둥둥 이동만 유지 (클릭 이벤트 없음) ===== */
+(()=>{
+  const orbs=[...document.querySelectorAll('#orbs .orb')];
+  if(!orbs.length) return;
+  const rnd=(a,b)=>Math.random()*(b-a)+a;
+  function move(el){
+    const d=rnd(6,12), r=rnd(1.5,4), ang=rnd(0,Math.PI*2);
+    const dx=Math.cos(ang)*r, dy=Math.sin(ang)*r;
+    el.style.setProperty('--t',d+'s');
+    el.style.setProperty('--dx',dx+'vmin');
+    el.style.setProperty('--dy',dy+'vmin');
+    setTimeout(()=>move(el),(d+rnd(.6,1.2))*1000);
+  }
+  orbs.forEach(el=>setTimeout(()=>move(el),rnd(100,900)));
+})();
+
+/* ===== 네비 토글 ===== */
+(()=>{
+  const btn=document.getElementById('menuBtn'),nav=document.getElementById('navPanel');
+  if(!btn||!nav) return;
+  const open=()=>{nav.classList.add('open');nav.setAttribute('aria-hidden','false');btn.setAttribute('aria-expanded','true');};
+  const close=()=>{nav.classList.remove('open');nav.setAttribute('aria-hidden','true');btn.setAttribute('aria-expanded','false');};
+  btn.addEventListener('click',e=>{e.stopPropagation();nav.classList.contains('open')?close():open();});
+  document.addEventListener('click',e=>{if(!nav.contains(e.target)&&e.target!==btn)close();});
+  addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+})();
+
+/* ===== 배경 BGM 토글만 유지 ===== */
+(()=>{
+  const a=document.getElementById('bgm'),b=document.getElementById('audioBtn');
+  if(!a||!b) return;
+  const get=()=>{const v=parseFloat(localStorage.getItem('bgmVol'));return Number.isFinite(v)?Math.max(0,Math.min(1,v)):0.35;};
+  const set=v=>localStorage.setItem('bgmVol',String(Math.max(0,Math.min(1,v))));
+  let raf=null;
+  const fade=(to,ms=500)=>{
+    if(raf)cancelAnimationFrame(raf);
+    const s=a.volume,t0=performance.now();
+    const step=t=>{const k=Math.min(1,(t-t0)/ms);a.volume=s+(to-s)*k;if(k<1)raf=requestAnimationFrame(step);};
+    raf=requestAnimationFrame(step);
+  };
+  const ui=()=>{
+    const m=a.paused||a.muted||a.volume===0;
+    b.classList.toggle('is-muted',m);
+    b.classList.toggle('is-playing',!m);
+    b.setAttribute('aria-pressed',String(!m));
+  };
+  a.muted=false; a.volume=0.0;
+  (async()=>{
+    try{await a.play(); fade(get(),900);}catch(_){} finally{ui();}
+  })();
+  b.addEventListener('click',async()=>{
+    try{
+      if(a.paused){ await a.play(); a.muted=false; fade(Math.max(.05,get()),400); }
+      else{ fade(0,300); setTimeout(()=>{a.pause(); ui();},320); }
+    }catch(_){} finally{ ui(); }
+  });
+  b.addEventListener('wheel',e=>{
+    e.preventDefault();
+    let v=(a.volume||get())+(e.deltaY<0?.06:-.06);
+    v=Math.max(0,Math.min(1,v));
+    a.volume=v; a.muted=(v===0); set(v);
+    if(a.paused&&v>0){ a.play().catch(()=>{}); }
+    ui();
+  },{passive:false});
+  ['play','pause','volumechange','emptied','suspend','stalled'].forEach(ev=>a.addEventListener(ev,ui));
+})();
+</script>
+</body>
+</html>
