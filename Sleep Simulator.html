@@ -539,6 +539,90 @@ addEventListener('wheel',(e)=>{
   sleepBtn.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); focusAndGo(sleepBtn, 'sleep.html'); } });
 })();
 
+/* ===== Dream / Nightmare 클릭 연출 ===== */
+(()=>{
+  const dreamBtn = document.querySelector('.obj.o2');   // Dream
+  const nightBtn = document.querySelector('.obj.o3');   // Nightmare
+  const msgEl    = document.getElementById('centerMsg');
+  const veil     = document.getElementById('sceneVeil');
+  if(!msgEl || !veil) return;
+
+  let running = false;
+
+  function typeOutBoxLocal(el, text, speed=58){
+    return new Promise(resolve=>{
+      el.innerHTML = '<div class="box"><span class="text"></span><span class="caret">│</span></div>';
+      el.classList.add('show');
+      const textNode = el.querySelector('.text');
+      let i=0;
+      const timer = setInterval(()=>{
+        if(i < text.length){ textNode.append(document.createTextNode(text[i++])); }
+        else{ clearInterval(timer); setTimeout(resolve, 380); }
+      }, speed);
+    });
+  }
+
+  function onTransitionEndOnceLocal(target, prop='transform', timeout=2400){
+    return new Promise(resolve=>{
+      let fired=false;
+      const handler = (e)=>{ if(e.propertyName===prop){ fired=true; target.removeEventListener('transitionend',handler); resolve(); } };
+      target.addEventListener('transitionend', handler);
+      setTimeout(()=>{ if(!fired){ target.removeEventListener('transitionend',handler); resolve(); } }, timeout);
+    });
+  }
+
+  function focusAndGoLocal(buttonEl, toURL, message){
+    if(running) return; running = true;
+    document.body.classList.add('scene-busy');
+
+    const img = buttonEl.querySelector('img');
+    const r = img.getBoundingClientRect();
+
+    const wrap = document.createElement('div');
+    wrap.className = 'focus-wrap';
+    const cx0 = r.left + r.width/2;
+    const cy0 = r.top  + r.height/2;
+    wrap.style.left = cx0 + 'px';
+    wrap.style.top  = cy0 + 'px';
+    wrap.style.width  = r.width +'px';
+    wrap.style.height = r.height+'px';
+    wrap.style.transform = 'translate(-50%,-50%) scale(1)';
+    const clone = img.cloneNode(true);
+    wrap.appendChild(clone);
+    document.body.appendChild(wrap);
+
+    img.style.visibility = 'hidden';
+
+    const cx = innerWidth/2;
+    const cy = innerHeight/2;
+    const dx = cx - cx0;
+    const dy = cy - cy0;
+
+    requestAnimationFrame(()=>{
+      wrap.style.transform = `translate(-50%,-50%) translate(${dx}px, ${dy}px) scale(1.65)`;
+    });
+
+    (async ()=>{
+      await onTransitionEndOnceLocal(wrap, 'transform', 2600);
+      await typeOutBoxLocal(msgEl, message, 58);
+      await new Promise(res=> setTimeout(res, 700));
+      veil.classList.add('show');
+      veil.addEventListener('transitionend', ()=>{ location.assign(toURL); }, { once:true });
+    })();
+  }
+
+  if(dreamBtn){
+    const goDream = (e)=>{ e.preventDefault(); focusAndGoLocal(dreamBtn, 'dream.html', 'You go to dream‥'); };
+    dreamBtn.addEventListener('click', goDream);
+    dreamBtn.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ goDream(e); } });
+  }
+  if(nightBtn){
+    const goNight = (e)=>{ e.preventDefault(); focusAndGoLocal(nightBtn, 'nightmare.html', 'You step into a nightmare‥'); };
+    nightBtn.addEventListener('click', goNight);
+    nightBtn.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ goNight(e); } });
+  }
+})();
+
 /* ===== 메뉴(리스트) 버튼 ↔ 네비 패널 ===== */
 (()=>{
   const menuBtn=document.getElementById('menuBtn');
