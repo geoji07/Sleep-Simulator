@@ -170,12 +170,12 @@
     .hud{ top:calc(var(--safe-top) + 8px); right:calc(var(--safe-right) + 12px); }
     .hud-btn{ width:var(--hud-size); height:var(--hud-size); }
 
-    .title.logo{
-      position:fixed; left:0; right:0;
-      top:calc(var(--safe-top) + 8vh);
-      display:grid; place-items:center;
-      font-size:clamp(26px, 8.2vmin, 48px);
-    }
+     .title.logo{
+    position:fixed; left:0; right:0;
+    top:calc(var(--safe-top) + 5vh);   /* 기존 8vh → 5vh */
+    display:grid; place-items:center;
+    font-size:clamp(26px, 8.2vmin, 48px);
+  }
 
     .stage{ position:fixed; inset:0; pointer-events:auto; }
 
@@ -194,9 +194,9 @@
     @keyframes floatX_m{ 0%{ transform:translateX(-0.3vw) } 100%{ transform:translateX(0.3vw) } }
 
     /* 원하는 높이로 세로 배치 */
-    .o1{ top: 22vh !important; }
-    .o2{ top: 46vh !important; }
-    .o3{ top: 70vh !important; }
+    .o1{ top: 18vh !important; }  /* 기존 22vh → 18vh */
+  .o2{ top: 40vh !important; }  /* 기존 46vh → 40vh */
+  .o3{ top: 62vh !important; }  /* 기존 70vh → 62vh */
   }
 </style>
 </head>
