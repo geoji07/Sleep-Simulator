@@ -10,11 +10,12 @@
     --title-size: clamp(36px, 8vmin, 100px);
     --label-size: clamp(13px, 2.4vmin, 23px);
     --ease: cubic-bezier(.22,.61,.36,1);
+    --cursor-size:120px;
   }
   *{ box-sizing:border-box }
-  html,body{ height:100% }
+  html,body{ margin:0; padding:0; height:100% }
   body{
-    margin:0; overflow:hidden; background:#000; color:var(--text);
+    overflow:hidden; background:#000; color:var(--text);
     font-family:ui-sans-serif,system-ui,"Noto Sans KR";
   }
 
@@ -28,16 +29,23 @@
   .fadein{ opacity:0; transform:translateY(8px) scale(.985); transition:opacity 900ms var(--ease), transform 900ms var(--ease); transition-delay:var(--d,0s) }
   .page-ready .fadein{ opacity:1; transform:translateY(0) scale(1) }
 
-  /* ===== 배경 비디오: 화면에 꽉 채우기 ===== */
+  /* ===== 뷰포트 높이(모바일 주소창 대응) ===== */
+  #bgVideo, .overlay, .container, .stage, .img-layer, .title.logo {
+    height: 100svh;
+  }
+  @supports not (height: 100svh) {
+    #bgVideo, .overlay, .container, .stage, .img-layer, .title.logo { height: 100dvh; }
+  }
+
+  /* ===== 배경 비디오 ===== */
   #bgVideo{
     position:fixed; inset:0;
     width:100vw;
-    height:calc(var(--vh, 1vh) * 100);
     object-fit:cover; object-position:center;
     background:#000; z-index:0; pointer-events:none;
   }
   .overlay{ position:fixed; inset:0; z-index:1; pointer-events:none; }
-  .container{ position:relative; height:calc(var(--vh, 1vh) * 100); z-index:2; }
+  .container{ position:relative; z-index:2; }
 
   /* ---------- LOGO ---------- */
   .title{ position:absolute; inset:0; display:grid; place-items:center; font-weight:800; font-size:var(--title-size); text-shadow:0 2px 18px #000; }
@@ -86,7 +94,7 @@
   body.cursor-on #fxCursor{ opacity:1; }
   #fxCursor.is-down{ transform: translate(-50%,-50%) scale(.93); }
 
- /* 우상단 컨트롤 */
+  /* 우상단 컨트롤 */
   #menuBtn{ position: fixed; top:18px; right:18px; z-index:10000; width:46px; height:46px; border-radius:18px; border:1px solid #ffffff2a; background:#0b0b0bcc; box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35); backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer; transition: transform .22s ease, background .2s ease, box-shadow .25s ease; }
   #menuBtn:hover{ transform: translateZ(0) scale(1.08) rotate(1.5deg); background:#0b0b0be6; box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 6px #ffffff10; }
   #menuBtn img{ width:60%; height:60%; object-fit:contain; }
@@ -112,8 +120,7 @@
   .nav-grid{ display:grid; gap:16px; }
   .nav-btn{ display:flex; align-items:center; justify-content:center; height:56px; border-radius:16px; background:#fff; color:#111; font-weight:800;
     box-shadow:0 8px 24px rgba(0,0,0,.08), 0 1px 0 rgba(0,0,0,.06), inset 0 0 0 1px rgba(0,0,0,.06);
-    transition: transform .14s ease, box-shadow .18s ease, background .18s ease; cursor:pointer; user-select:none;
-    text-decoration:none; color:inherit;}
+    transition: transform .14s ease, box-shadow .18s ease, background .18s ease; cursor:pointer; user-select:none; text-decoration:none; color:inherit;}
   .nav-btn:hover{ transform: translateX(-3px); background:#f8fafc; box-shadow:0 12px 28px rgba(0,0,0,.12), 0 1px 0 rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.08); }
   @media (max-width:600px){ .nav-panel{ width:88vw; } .nav-btn{ height:54px; border-radius:14px; } }
   .nav-grid a.nav-btn,
@@ -170,21 +177,21 @@
     .hud{ top:calc(var(--safe-top) + 8px); right:calc(var(--safe-right) + 12px); }
     .hud-btn{ width:var(--hud-size); height:var(--hud-size); }
 
-     .title.logo{
-    position:fixed; left:0; right:0;
-    top:calc(var(--safe-top) + 5vh);   /* 기존 8vh → 5vh */
-    display:grid; place-items:center;
-    font-size:clamp(26px, 8.2vmin, 48px);
-  }
+    .title.logo{
+      position:fixed; left:0; right:0;
+      top:calc(var(--safe-top) + 4vh); /* 더 위로 */
+      display:grid; place-items:center;
+      font-size:clamp(26px, 8.2vmin, 48px);
+    }
 
     .stage{ position:fixed; inset:0; pointer-events:auto; }
 
-    /* 세로 스택 & 가로 넘침 방지(모바일에만) */
+    /* 세로 스택 & 가로 넘침 방지 */
     .obj{
       left:50% !important;
       transform:translateX(-50%) !important;
       width:clamp(150px, 46vw, 280px);
-      animation:none !important; /* margin-left로 가로 스크롤 생기는 문제 차단 */
+      animation:none !important;
     }
     .obj img{
       animation: floatY_m 8s ease-in-out infinite alternate,
@@ -193,10 +200,10 @@
     @keyframes floatY_m{ 0%{ transform:translateY(-0.6vh) } 100%{ transform:translateY(0.6vh) } }
     @keyframes floatX_m{ 0%{ transform:translateX(-0.3vw) } 100%{ transform:translateX(0.3vw) } }
 
-    /* 원하는 높이로 세로 배치 */
-    .o1{ top: 18vh !important; }  /* 기존 22vh → 18vh */
-  .o2{ top: 40vh !important; }  /* 기존 46vh → 40vh */
-  .o3{ top: 62vh !important; }  /* 기존 70vh → 62vh */
+    /* 원하는 높이로 세로 배치(상단으로 당김) */
+    .o1{ top: 16vh !important; }
+    .o2{ top: 36vh !important; }
+    .o3{ top: 56vh !important; }
   }
 </style>
 </head>
@@ -269,6 +276,9 @@
   <div id="centerMsg" class="center-msg" aria-hidden="true"></div>
   <div id="sceneVeil" class="scene-veil" aria-hidden="true"></div>
 
+  <!-- 실제 오디오 소스: 스크립트보다 위에 둠 -->
+  <audio id="bgm" src="dreamcore.mp3" preload="auto" loop></audio>
+
 <script>
 /* ===== 인트로 ===== */
 (function(){
@@ -278,10 +288,6 @@
   if(bg.readyState>=2) setTimeout(reveal,150); else bg.addEventListener('loadeddata', ()=> setTimeout(reveal,150), {once:true});
   setTimeout(()=>{ if(!document.body.classList.contains('page-ready')) reveal(); }, 2000);
 })();
-
-/* ===== 모바일 주소창 높이 이슈 보정 ===== */
-function setVH(){ document.documentElement.style.setProperty('--vh', (window.innerHeight*0.01)+'px'); }
-setVH(); addEventListener('resize', setVH);
 
 /* ===== PC 커서 이펙트 (터치 디바이스엔 숨김) ===== */
 (()=>{
@@ -529,37 +535,53 @@ addEventListener('wheel',(e)=>{
   });
 })();
 
-/* ===== 오디오 토글 ===== */
+/* ===== 배경 BGM (오디오 토글) ===== */
 (()=>{
-  const audio=document.getElementById('bgm');
-  const btn=document.getElementById('audioBtn');
-  if(!audio||!btn) return;
+  const a=document.getElementById('bgm'), b=document.getElementById('audioBtn');
+  if(!a||!b) return;
 
-  const updateVisual = ()=>{
-    const mutedLike = audio.paused || audio.muted || audio.volume===0;
-    btn.classList.toggle('is-muted', mutedLike);
-    btn.classList.toggle('is-playing', !mutedLike);
-    btn.setAttribute('aria-pressed', String(!mutedLike));
+  const get=()=>{ const v=parseFloat(localStorage.getItem('bgmVol')); return Number.isFinite(v)?Math.max(0,Math.min(1,v)):0.35; };
+  const set=v=>localStorage.setItem('bgmVol',String(Math.max(0,Math.min(1,v))));
+  let raf=null;
+  const fade=(to,ms=500)=>{ if(raf)cancelAnimationFrame(raf); const s=a.volume,t0=performance.now();
+    const step=t=>{ const k=Math.min(1,(t-t0)/ms); a.volume=s+(to-s)*k; if(k<1) raf=requestAnimationFrame(step); };
+    raf=requestAnimationFrame(step);
+  };
+  const ui=()=>{ const m=a.paused||a.muted||a.volume===0;
+    b.classList.toggle('is-muted',m);
+    b.classList.toggle('is-playing',!m);
+    b.setAttribute('aria-pressed', String(!m));
   };
 
-  audio.muted=true; audio.volume=0;
-  const fade=(to,ms=600)=>{ const s=audio.volume,t0=performance.now(); const step=t=>{ const k=Math.min(1,(t-t0)/ms); audio.volume=s+(to-s)*k; if(k<1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+  // iOS/모바일 자동재생 제한: 첫 사용자 제스처에서 play 허용
+  const armAutoplay = ()=>{
+    document.removeEventListener('pointerdown', armAutoplay);
+    a.muted=false;
+    a.play().then(()=>fade(get(),700)).catch(()=>{}).finally(ui);
+  };
+  document.addEventListener('pointerdown', armAutoplay, { once:true });
 
-  const play=async()=>{ try{ if(audio.paused) await audio.play(); audio.muted=false; fade(0.35,800);}catch(_){} finally{ updateVisual(); } };
-
-  addEventListener('pointerdown', play, { once:true });
-
-  btn.addEventListener('click', async ()=>{
-    if(audio.paused){ await play(); }
-    else{ fade(0,400); setTimeout(()=>{ audio.pause(); updateVisual(); },420); }
+  // 버튼 토글
+  b.addEventListener('click', async ()=>{
+    try{
+      if(a.paused){ await a.play(); a.muted=false; fade(Math.max(.05,get()),300); }
+      else{ fade(0,250); setTimeout(()=>{ a.pause(); ui(); },260); }
+    }catch(_){} finally{ ui(); }
   });
 
-  ['play','pause','volumechange','emptied','suspend','stalled'].forEach(ev=> audio.addEventListener(ev, updateVisual));
-  updateVisual();
+  // 휠 볼륨(PC)
+  b.addEventListener('wheel', e=>{
+    e.preventDefault();
+    let v=(a.volume||get())+(e.deltaY<0?.06:-.06);
+    v=Math.max(0,Math.min(1,v));
+    a.volume=v; a.muted=(v===0); set(v);
+    if(a.paused && v>0){ a.play().catch(()=>{}); }
+    ui();
+  }, {passive:false});
+
+  ['play','pause','volumechange','emptied','suspend','stalled'].forEach(ev=>a.addEventListener(ev,ui));
+  ui();
 })();
 </script>
-
-<!-- 실제 오디오 소스 -->
-<audio id="bgm" src="dreamcore.mp3" preload="auto" loop></audio>
 </body>
 </html>
