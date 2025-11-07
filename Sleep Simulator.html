@@ -203,10 +203,16 @@
     transform: translateX(-50%) !important;
     width: clamp(150px, 46vw, 280px);
     animation: none !important;
+    aspect-ratio: 1 / 1;      /* 정사각형 고정 */
+  overflow: visible;         /* 그림자/확대여유 */
+  --pad: 6%;                 /* 기본 내부 여백(필요 시 조절) */
   }
   .obj img{
     animation: floatY_m 8s ease-in-out infinite alternate,
                floatX_m 11s ease-in-out infinite alternate;
+                object-fit: contain;       /* cover → contain */
+  padding: var(--pad);       /* 귀/머리 잘림 방지 */
+  border-radius: 50%;
   }
   @keyframes floatY_m{ 0%{ transform:translateY(-0.6vh) } 100%{ transform:translateY(0.6vh) } }
   @keyframes floatX_m{ 0%{ transform:translateX(-0.3vw) } 100%{ transform:translateX(0.3vw) } }
@@ -214,7 +220,7 @@
   /* 세로 위치(더 위) */
   .o1{ top: 10vh !important; }  /* 18vh → 14vh */
   .o2{ top: 30vh !important; }  /* 40vh → 34vh */
-  .o3{ top: 50vh !important; }  /* 62vh → 54vh */
+  .o3{ top: 50vh !important; --sizeScale: .88; }  /* 62vh → 54vh */
 }
 </style>
 </head>
