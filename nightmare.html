@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Nightmare – Scene (Template)</title>
+<title>Nightmare</title>
 <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Reenie+Beanie&display=swap" rel="stylesheet">
 <style>
   @font-face{
@@ -18,18 +18,106 @@
       --cursor-size:120px;
       --feather-edge:78%;
       --orb-size: clamp(200px, 30vmin, 460px);
+      --glitch-x:0px;
+      --glitch-y:0px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0; overflow:hidden; background:#000; color:var(--text);
-       font-family:ui-sans-serif,system-ui,"Noto Sans KR",Apple SD Gothic Neo,Malgun Gothic;}
+  body{
+    margin:0; overflow:hidden; background:#000; color:var(--text);
+    font-family:ui-sans-serif,system-ui,"Noto Sans KR",Apple SD Gothic Neo,Malgun Gothic;
+  }
 
   /* 배경 */
-  .bg{position:fixed; inset:0; z-index:0;
-      background:
+  .bg{
+    position:fixed; inset:0; z-index:0;
+    background:
       radial-gradient(120% 120% at 50% 80%, rgba(0,0,0,.60), rgba(0,0,0,.88)),
-      url("image/Sleep_bg.png") center/cover no-repeat;
-      filter: brightness(.46) contrast(1.03) saturate(.98);}
+      url("image/Nightmare_bg.png") center/cover no-repeat;
+    filter: brightness(.9) contrast(1.02);
+    will-change:transform,filter;
+  }
+
+  /* === 발자국용 그레이 오버레이 === */
+  .footprints-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:800;
+    pointer-events:none;
+    opacity:0;
+    background:
+      radial-gradient(circle at 50% 40%,
+        rgba(90,90,90,0.90) 0%,
+        rgba(20,20,20,0.98) 55%,
+        rgba(5,5,5,1) 100%);
+    transition:opacity .4s ease;
+  }
+  .footprints-backdrop.is-active{
+    opacity:1;
+  }
+
+  /* === 발자국 레이어 === */
+  .footprints-layer{
+    position:fixed;
+    inset:0;
+    z-index:801;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .footprint{
+    position:absolute;
+    width:clamp(70px, 8vmin, 130px);
+    opacity:0;
+    transform-origin:center;
+    pointer-events:none;
+    animation:footprintFade 3s ease-out forwards;
+  }
+  @keyframes footprintFade{
+    0%{
+      opacity:0;
+      transform:translate(-50%, -50%) scale(0.9);
+    }
+    15%{
+      opacity:1;
+    }
+    85%{
+      opacity:1;
+    }
+    100%{
+      opacity:0;
+      transform:translate(-50%, -50%) scale(1);
+    }
+  }
+
+  /* 발자국 효과 힌트 */
+  .fp-hint{
+    position:fixed;
+    inset:0;
+    z-index:12010;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-family: ui-sans-serif, system-ui, "Noto Sans KR", Apple SD Gothic Neo, Malgun Gothic;
+    font-weight:400;
+    letter-spacing:.02em;
+    font-size: clamp(18px, 3.6vmin, 30px);
+    color:#fff;
+    text-shadow: 0 8px 30px rgba(0,0,0,.6);
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .fp-hint p{ margin:4px 0; }
+  .fp-hint .hint-main{
+    font-size: clamp(18px, 3.6vmin, 30px);
+    letter-spacing:.02em;
+  }
+  .fp-hint.is-visible{
+    opacity:1;
+    pointer-events:auto;
+  }
 
   /* 인버트 커서 */
   #fxCursor{
@@ -45,71 +133,147 @@
   @media (hover:none),(pointer:coarse){#fxCursor{display:none}}
 
   /* 우상단 컨트롤 */
-  #menuBtn{ position: fixed; top:18px; right:18px; z-index:10000; width:46px; height:46px; border-radius:18px; border:1px solid #ffffff2a; background:#0b0b0bcc; box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35); backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer; transition: transform .22s ease, background .2s ease, box-shadow .25s ease; }
-  #menuBtn:hover{ transform: translateZ(0) scale(1.08) rotate(1.5deg); background:#0b0b0be6; box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 6px #ffffff10; }
+  #menuBtn{
+    position: fixed; top:18px; right:18px; z-index:10000; width:46px; height:46px;
+    border-radius:18px; border:1px solid #ffffff2a; background:#0b0b0bcc;
+    box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35);
+    backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer;
+    transition: transform .22s ease, background .2s ease, box-shadow .25s ease;
+  }
+  #menuBtn:hover{
+    transform: translateZ(0) scale(1.08) rotate(1.5deg);
+    background:#0b0b0be6;
+    box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 6px #ffffff10;
+  }
   #menuBtn img{ width:60%; height:60%; object-fit:contain; }
 
-  #audioBtn{ position: fixed; top:18px; right:74px; z-index:9998; width:46px; height:46px; border-radius:999px; border:1px solid #ffffff2a; background:#0b0b0bcc; box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35); backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer; transition: transform .22s ease, background .2s ease, box-shadow .25s ease, opacity .25s ease; }
+  #audioBtn{
+    position: fixed; top:18px; right:74px; z-index:9998; width:46px; height:46px;
+    border-radius:999px; border:1px solid #ffffff2a; background:#0b0b0bcc;
+    box-shadow:0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.35);
+    backdrop-filter: blur(6px); display:grid; place-items:center; cursor:pointer;
+    transition: transform .22s ease, background .2s ease, box-shadow .25s ease, opacity .25s ease;
+  }
   #audioBtn img{ width:60%; height:60%; object-fit:contain; }
-  #audioBtn .icon{ position:absolute; width:62%; height:62%; object-fit:contain; transition: opacity .25s ease, transform .25s ease; }
+  #audioBtn .icon{
+    position:absolute; width:62%; height:62%; object-fit:contain;
+    transition: opacity .25s ease, transform .25s ease;
+  }
   #audioBtn .icon.sound{ opacity:1; }
   #audioBtn .icon.mute{  opacity:0; transform: scale(.92); }
   #audioBtn.is-muted .icon.sound{ opacity:0; transform: scale(1.08); }
   #audioBtn.is-muted .icon.mute{  opacity:1; transform: scale(1); }
-  #audioBtn.is-playing{ box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 7px #7bd0ff20, inset 0 0 0 1px rgba(255,255,255,.4); }
+  #audioBtn.is-playing{
+    box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 7px #7bd0ff20, inset 0 0 0 1px rgba(255,255,255,.4);
+  }
 
   /* 네비 */
-  .nav-panel{position: fixed; top:12px; right:12px; z-index:9999; width: 360px; max-width: 92vw; height: calc(100vh - 24px);
-    border-radius: 28px; background: #ffffff; color:#111; box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.06);
-    display:flex; flex-direction:column; overflow:hidden; transform-origin: center right; transform: translateX(8px) scale(.98);
-    opacity:0; clip-path: inset(0 0 0 98% round 28px); pointer-events:none;
-    transition: clip-path .28s var(--ease), transform .28s var(--ease), opacity .2s ease;}
-  .nav-panel.open{ clip-path: inset(0 0 0 0 round 28px); transform: translateX(0) scale(1); opacity:1; pointer-events:auto; }
-  .nav-header{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px; font-weight:900; letter-spacing:.4px; font-size:14px; color:#222; border-bottom: 1px solid rgba(0,0,0,.06); }
+  .nav-panel{
+    position: fixed; top:12px; right:12px; z-index:9999; width: 360px; max-width: 92vw;
+    height: calc(100vh - 24px); border-radius: 28px; background: #ffffff; color:#111;
+    box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.06);
+    display:flex; flex-direction:column; overflow:hidden; transform-origin: center right;
+    transform: translateX(8px) scale(.98); opacity:0; clip-path: inset(0 0 0 98% round 28px);
+    pointer-events:none;
+    transition: clip-path .28s var(--ease), transform .28s var(--ease), opacity .2s ease;
+  }
+  .nav-panel.open{
+    clip-path: inset(0 0 0 0 round 28px);
+    transform: translateX(0) scale(1);
+    opacity:1; pointer-events:auto;
+  }
+  .nav-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 20px; font-weight:900; letter-spacing:.4px; font-size:14px; color:#222;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+  }
   .nav-body{ padding:18px; overflow:auto; }
   .nav-grid{ display:grid; gap:16px; }
-  .nav-btn{ display:flex; align-items:center; justify-content:center; height:56px; border-radius:16px; background:#fff; color:#111; font-weight:800;
+  .nav-btn{
+    display:flex; align-items:center; justify-content:center; height:56px; border-radius:16px;
+    background:#fff; color:#111; font-weight:800;
     box-shadow:0 8px 24px rgba(0,0,0,.08), 0 1px 0 rgba(0,0,0,.06), inset 0 0 0 1px rgba(0,0,0,.06);
-    transition: transform .14s ease, box-shadow .18s ease, background .18s ease; cursor:pointer; user-select:none;
-    text-decoration:none; color:inherit;}
-  .nav-btn:hover{ transform: translateX(-3px); background:#f8fafc; box-shadow:0 12px 28px rgba(0,0,0,.12), 0 1px 0 rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.08); }
-  @media (max-width:600px){ .nav-panel{ width:88vw; } .nav-btn{ height:54px; border-radius:14px; } }
+    transition: transform .14s ease, box-shadow .18s ease, background .18s ease;
+    cursor:pointer; user-select:none; text-decoration:none; color:inherit;
+  }
+  .nav-btn:hover{
+    transform: translateX(-3px); background:#f8fafc;
+    box-shadow:0 12px 28px rgba(0,0,0,.12), 0 1px 0 rgba(0,0,0,.08), inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+  @media (max-width:600px){
+    .nav-panel{ width:88vw; }
+    .nav-btn{ height:54px; border-radius:14px; }
+  }
   .nav-grid a.nav-btn,
   .nav-grid a.nav-btn:visited,
   .nav-grid a.nav-btn:hover,
   .nav-grid a.nav-btn:focus,
-  .nav-grid a.nav-btn:active { text-decoration:none !important; color:inherit; }
+  .nav-grid a.nav-btn:active{
+    text-decoration:none !important; color:inherit;
+  }
 
   /* 로고 */
-  .logo{position:fixed;left:26px;top:16px;z-index:10001;color:#fff;text-decoration:none;font-weight:900;
-    font-size:clamp(22px,3.4vmin,34px);letter-spacing:.02em;text-shadow:0 2px 12px #0008;user-select:none;}
+  .logo{
+    position:fixed;left:26px;top:16px;z-index:10001;color:#fff;text-decoration:none;font-weight:900;
+    font-size:clamp(22px,3.4vmin,34px);letter-spacing:.02em;text-shadow:0 2px 12px #0008;user-select:none;
+  }
 
   /* 오브 */
-  .orbs{position:fixed;inset:0;z-index:2;pointer-events:none}
+  .orbs{
+    position:fixed;inset:0;z-index:2;pointer-events:none;
+    will-change:transform;
+  }
   .orbs > *{pointer-events:auto}
-  .orb{position:absolute; width: var(--orb-size); height: var(--orb-size);
-       transform: translate(-50%,-50%) translate(var(--dx,0),var(--dy,0));
-       transition: transform var(--t,8s) var(--ease); pointer-events:none;}
-  .orb-inner{position:absolute;inset:0;border-radius:50%;overflow:hidden;
+  .orb{
+    position:absolute; width: var(--orb-size); height: var(--orb-size);
+    transform: translate(-50%,-50%) translate(var(--dx,0),var(--dy,0));
+    transition: transform var(--t,8s) var(--ease); pointer-events:none;
+  }
+  .orb-inner{
+    position:absolute;inset:0;border-radius:50%;overflow:hidden;
     box-shadow:0 6px 26px #00000099,inset 0 0 0 0.5px #ffffff22,inset 0 0 26px #ffffff0d;
     background:radial-gradient(80% 80% at 50% 50%,#222,#0f0f0f);
     transform:scale(var(--hover,1));
     transition:transform .16s cubic-bezier(.2,.8,.2,1),filter .3s var(--ease),box-shadow .3s var(--ease);
     will-change:transform;pointer-events:auto;
     -webkit-mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);
-            mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);}
-  .orb .orb-inner:hover{ --hover:1.28; filter:brightness(1.08);
-    box-shadow:0 18px 46px rgba(0,0,0,.62),0 0 0 10px rgba(255,255,255,.08),inset 0 0 0 0.5px #ffffff44,inset 0 0 30px #ffffff12;}
+            mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);
+  }
+  .orb .orb-inner:hover{
+    --hover:1.28; filter:brightness(1.08);
+    box-shadow:0 18px 46px rgba(0,0,0,.62),0 0 0 10px rgba(255,255,255,.08),
+               inset 0 0 0 0.5px #ffffff44,inset 0 0 30px #ffffff12;
+  }
   .orb .orb-inner:active{--hover:1.18}
   .orb:hover{z-index:20}
 
+  .orb img{
+    width:110%; height:110%; object-fit:cover;
+    filter: blur(3.2px) brightness(.92) contrast(1.05) saturate(.92)
+            drop-shadow(0 12px 28px rgba(0,0,0,.55));
+    transform: translate(-5%,-5%) scale(1.06) rotate(var(--rot,0deg));
+    opacity:.96;
+    -webkit-mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 var(--feather-edge), transparent 100%);
+    transition: filter .35s var(--ease), transform .35s var(--ease);
+  }
+  .orb-inner:hover img{
+    filter: blur(1.6px) brightness(1.02) contrast(1.08);
+    transform: translate(-5%,-5%) scale(1.1) rotate(var(--rot,0deg));
+  }
+
   /* 카드 */
-  .card{position:absolute;z-index:50;width:clamp(220px,28vw,360px);background:#fff;color:#111;border-radius:24px;
+  .card{
+    position:absolute;z-index:50;width:clamp(220px,28vw,360px);background:#fff;color:#111;border-radius:24px;
     box-shadow:0 22px 70px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.06);
     padding:clamp(14px,1.8vw,20px);opacity:0;transform:translateY(8px)scale(.96);
-    transition:opacity .22s var(--ease),transform .22s var(--ease);pointer-events:none;}
-  .card h3{margin:0 0 10px;font-size:clamp(18px,2.2vw,22px);font-weight:900;letter-spacing:.2px}
+    transition:opacity .22s var(--ease),transform .22s var(--ease);pointer-events:none;
+  }
+  .card h3{
+    margin:0 0 10px;font-size:clamp(18px,2.2vw,22px);font-weight:900;letter-spacing:.2px;
+  }
   .card .divider{height:1px;background:#00000014;margin:6px 0 12px}
+
   /* 카드 위치 */
   .card-p1{left:26%;top:26%}
   .card-p2{left:62%;top:30%}
@@ -117,21 +281,63 @@
   @media (max-width:700px){
     .card-p4{left:36%;top:calc(62% + 14vmin + 2vh);transform:translateX(-50%) scale(.96);}
   }
-  .card-p3{ left: calc(86% - 22vmin - 4vw); top:  calc(28% + 14vmin + 3vh); transform: translate(-50%, -50%) scale(.96);}
-  @media (max-width:700px){ .card-p3{ left: 86%; top: calc(28% + 18vmin + 3vh); transform: translateX(-50%) scale(1);} }
-  .card-p5{ left: calc(60% + 22vmin + 5vw); top:  calc(88% - 20vmin - 4vh); transform: translate(-50%, -50%) scale(.96); }
-  @media (max-width:700px){ .card-p5{ left: 60%; top: calc(88% + 16vmin + 3vh); transform: translateX(-50%) scale(1); } }
+  .card-p3{
+    left: calc(86% - 22vmin - 4vw); top:  calc(28% + 14vmin + 3vh);
+    transform: translate(-50%, -50%) scale(.96);
+  }
+  @media (max-width:700px){
+    .card-p3{ left: 86%; top: calc(28% + 18vmin + 3vh); transform: translateX(-50%) scale(1);}
+  }
+  .card-p5{
+    left: calc(60% + 22vmin + 5vw); top:  calc(88% - 20vmin - 4vh);
+    transform: translate(-50%, -50%) scale(.96);
+  }
+  @media (max-width:700px){
+    .card-p5{ left: 60%; top: calc(88% + 16vmin + 3vh); transform: translateX(-50%) scale(1);}
+  }
 
   /* 카드 표시 (데스크탑 hover) */
-  .card-wrap:has(.orb .orb-inner:hover) .card{opacity:1;transform:translateY(0)scale(1);pointer-events:auto;}
-  .card-wrap:has(.orb.p4 .orb-inner:hover) .card-p4{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1);}
-  @media (max-width:700px){
-    .card-wrap:has(.orb.p4 .orb-inner:hover) .card-p4{transform:translateX(-50%) scale(1);}
+  .card-wrap:has(.orb .orb-inner:hover) .card{
+    opacity:1;transform:translateY(0)scale(1);pointer-events:auto;
   }
-  .card-wrap:has(.orb.p3 .orb-inner:hover) .card-p3{ opacity:1; pointer-events:auto; transform: translate(-50%, -50%) scale(1); }
-  @media (max-width:700px){ .card-wrap:has(.orb.p3 .orb-inner:hover) .card-p3{ transform: translateX(-50%) scale(1); } }
-  .card-wrap:has(.orb.p5 .orb-inner:hover) .card-p5{ opacity:1; pointer-events:auto; transform: translate(-50%, -50%) scale(1); }
-  @media (max-width:700px){ .card-wrap:has(.orb.p5 .orb-inner:hover) .card-p5{ transform: translateX(-50%) scale(1); } }
+  .card-wrap:has(.orb.p4 .orb-inner:hover) .card-p4{
+    opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1);
+  }
+  @media (max-width:700px){
+    .card-wrap:has(.orb.p4 .orb-inner:hover) .card-p4{
+      transform:translateX(-50%) scale(1);
+    }
+  }
+  .card-wrap:has(.orb.p3 .orb-inner:hover) .card-p3{
+    opacity:1; pointer-events:auto; transform: translate(-50%, -50%) scale(1);
+  }
+  @media (max-width:700px){
+    .card-wrap:has(.orb.p3 .orb-inner:hover) .card-p3{
+      transform: translateX(-50%) scale(1);
+    }
+  }
+  .card-wrap:has(.orb.p5 .orb-inner:hover) .card-p5{
+    opacity:1; pointer-events:auto; transform: translate(-50%, -50%) scale(1);
+  }
+  @media (max-width:700px){
+    .card-wrap:has(.orb.p5 .orb-inner:hover) .card-p5{
+      transform: translateX(-50%) scale(1);
+    }
+  }
+
+  .card .thumb{
+    width:100%; aspect-ratio:4/3; object-fit:cover;
+    border-radius:clamp(14px,1.6vw,18px);
+    margin:0 0 clamp(10px,1.2vw,12px);
+  }
+  .card p{
+    font-family:"Gloria Hallelujah","Reenie Beanie",cursive;
+    font-size:clamp(14px,2.6vw,18px);
+    line-height:1.8;
+    letter-spacing:.01em;
+    color:#222;
+    white-space:pre-line;
+  }
 
   /* 오브 초기 좌표 */
   .p1{left:14%;top:42%}
@@ -153,15 +359,12 @@
     .p4{ left:75%; top:58%; }
     .p5{ left:50%; top:86%; }
 
+    /* 🔻 모바일에서는 카드 아예 숨김 */
     .card{
-      left:50% !important; top:auto !important; bottom:calc(14vh + env(safe-area-inset-bottom, 0px));
-      transform:translate(-50%,0) scale(.96) !important;
-      width:min(92vw, 420px);
-      pointer-events:none; opacity:0;
+      display:none !important;
     }
-    .card.is-open{ opacity:1; transform:translate(-50%,0) scale(1) !important; pointer-events:auto; }
-    .card-wrap:has(.orb .orb-inner:hover) .card{ opacity:0; pointer-events:none; transform:translate(-50%,0) scale(.96) !important; }
-  }
+}
+
 
   /* 모바일 안정화 */
   @media (max-width: 700px){
@@ -171,53 +374,560 @@
   }
 
   #centerCat, #centerCat img,
-  #cloudOverlay, #cloudCanvas { touch-action: none; } /* (잔여 선택자 무해) */
+  #cloudOverlay, #cloudCanvas { touch-action: none; }
+
+  /* ===== EYE OVERLAY (Night Watch 오브 전용) ===== */
+  .eye-overlay{
+    position:fixed;
+    inset:0;
+    z-index:8800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 50% 20%,
+        rgba(0,0,0,0.4) 0%,
+        rgba(0,0,0,0.92) 52%,
+        #000 100%);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .45s var(--sleep-ease);
+  }
+  .eye-overlay.is-visible{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .eye-core{
+    position:relative;
+    width:clamp(380px, 62vmin, 900px);
+    aspect-ratio:1/1;
+    border-radius:50%;
+    overflow:hidden;
+    background:#000;
+    box-shadow:
+      0 28px 80px rgba(0,0,0,.96),
+      0 0 0 1px rgba(255,255,255,.08);
+    cursor:pointer;
+  }
+  .eye-core img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .eye-hint{
+    position:absolute;
+    left:50%;
+    bottom:-28px;
+    transform:translateX(-50%);
+    padding:6px 14px;
+    border-radius:999px;
+    background:#000000c8;
+    color:#f5f5f5;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+
+  /* 화면 전체 떨림 (눈용) */
+  body.is-eye-shaking .bg,
+  body.is-eye-shaking .orbs,
+  body.is-eye-shaking .logo,
+  body.is-eye-shaking #menuBtn,
+  body.is-eye-shaking #audioBtn,
+  body.is-eye-shaking #navPanel,
+  body.is-eye-shaking .glitch-overlay,
+  body.is-eye-shaking #handOverlay,
+  body.is-eye-shaking #eyeOverlay{
+    transform:translate3d(var(--eye-shake-x,0px),var(--eye-shake-y,0px),0);
+    transition:transform .04s cubic-bezier(.3,.9,.5,1.3);
+  }
+
+  /* ===== GLASS OVERLAY (Broken Mirror 오브 전용) ===== */
+  .glass-overlay{
+    position:fixed;
+    inset:0;
+    z-index:8700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 50% 10%,
+        rgba(0,0,0,0.25) 0%,
+        rgba(0,0,0,0.92) 55%,
+        #000 100%);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .45s var(--sleep-ease);
+  }
+  .glass-overlay.is-visible{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* 퍼즐 판 (정사각형) */
+  .glass-puzzle{
+    position:relative;
+    width:clamp(320px, 58vmin, 720px);
+    aspect-ratio:1 / 1;
+    border-radius:26px;
+    background:#030303;
+    box-shadow:
+      0 30px 90px rgba(0,0,0,.95),
+      0 0 0 1px rgba(255,255,255,.05);
+    overflow:hidden;
+  }
+
+  /* 공통 조각 스타일 */
+  .glass-piece{
+    position:absolute;
+    cursor:grab;
+    touch-action:none;
+    filter:drop-shadow(0 18px 36px rgba(0,0,0,.9));
+    transition:box-shadow .18s ease, filter .18s ease;
+  }
+  .glass-piece:active{
+    cursor:grabbing;
+    filter:drop-shadow(0 26px 60px rgba(0,0,0,1)) brightness(1.04);
+  }
+  .glass-piece img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  /* 실제 원본 비율에 맞춘 정답 위치 (920×920 기준 비율) */
+  .glass-piece.top{
+    left:0;
+    top:0;
+    width:100%;
+    height:31.8%;
+  }
+  .glass-piece.bottom{
+    left:0;
+    top:68.2%;
+    width:100%;
+    height:31.8%;
+  }
+  .glass-piece.left{
+    left:0;
+    top:0;
+    width:31.8%;
+    height:100%;
+  }
+  .glass-piece.right{
+    left:68.2%;
+    top:0;
+    width:31.8%;
+    height:100%;
+  }
+  .glass-piece.mid{
+    left:31.8%;
+    top:31.8%;
+    width:36.4%;
+    height:36.4%;
+  }
+
+  /* 힌트 – 통일된 스타일 */
+  .glass-hint{
+    position:fixed;
+    inset:0;
+    z-index:12015;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-family: ui-sans-serif, system-ui, "Noto Sans KR", Apple SD Gothic Neo, Malgun Gothic;
+    font-weight:400;
+    letter-spacing:.02em;
+    font-size: clamp(18px, 3.6vmin, 30px);
+    color:#fff;
+    text-shadow: 0 8px 30px rgba(0,0,0,.6);
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .glass-hint p{ margin:4px 0; }
+
+  .glass-hint .hint-label{
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    opacity:.7;
+  }
+  .glass-hint .hint-main{
+    font-size: clamp(18px, 3.6vmin, 30px);
+    letter-spacing:.02em;
+  }
+  .glass-hint .hint-sub{
+    margin-top:10px;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    opacity:.55;
+  }
+  .glass-hint.is-visible{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* 작은 화면에서 퍼즐 크기 축소 */
+  @media (max-width:600px){
+    .glass-puzzle{
+      width:min(92vw, 440px);
+    }
+  }
+
+  /* ===== HAND SEQUENCE (Shadowed Hands) ===== */
+  .hand-overlay{
+    position:fixed;
+    inset:0;
+    z-index:8500;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .35s var(--sleep-ease);
+  }
+  .hand-overlay.is-active{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .hand-img{
+    position:absolute;
+    top:50%;
+    max-height:80vh;
+    transform:translateY(-50%);
+    filter:drop-shadow(0 18px 40px rgba(0,0,0,.85));
+    cursor:pointer;
+    transition:
+      left .55s var(--sleep-ease),
+      right .55s var(--sleep-ease);
+    display:none;
+  }
+
+  .hand-img.from-right{
+    right:-40%;
+    left:auto;
+  }
+  .hand-img.from-right.is-in{
+    right:0;
+  }
+
+  .hand-img.from-left{
+    left:-40%;
+    right:auto;
+  }
+  .hand-img.from-left.is-in{
+    left:0;
+  }
+
+  .hand-img.is-shaking{
+    animation:handShake .4s ease-in-out;
+  }
+
+  @keyframes handShake{
+    0%  { transform:translateY(-50%) translateX(0) rotate(0deg); }
+    15% { transform:translateY(calc(-50% - 6px)) translateX(-8px) rotate(-4deg); }
+    30% { transform:translateY(calc(-50% + 4px)) translateX(6px) rotate(3deg); }
+    45% { transform:translateY(calc(-50% - 3px)) translateX(-5px) rotate(-2deg); }
+    60% { transform:translateY(calc(-50% + 2px)) translateX(4px) rotate(2deg); }
+    80% { transform:translateY(-50%) translateX(-2px) rotate(-1deg); }
+    100%{ transform:translateY(-50%) translateX(0) rotate(0deg); }
+  }
+
+  .hand-hint{
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    font-family: ui-sans-serif, system-ui, "Noto Sans KR", Apple SD Gothic Neo, Malgun Gothic;
+    font-size:clamp(18px, 3.2vmin, 28px);
+    color:#fff;
+    text-shadow:0 8px 30px rgba(0,0,0,.7);
+    letter-spacing:.04em;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .hand-hint.is-visible{
+    opacity:1;
+  }
+
+  body.is-hand-shaking .bg,
+  body.is-hand-shaking .orbs,
+  body.is-hand-shaking .logo,
+  body.is-hand-shaking #menuBtn,
+  body.is-hand-shaking #audioBtn,
+  body.is-hand-shaking #navPanel,
+  body.is-hand-shaking .glitch-overlay,
+  body.is-hand-shaking #handOverlay{
+    transform:translate3d(var(--hand-shake-x,0px),var(--hand-shake-y,0px),0);
+    transition:transform .08s cubic-bezier(.3,.9,.5,1.4);
+  }
+
+  /* ===== GLITCH OVERLAY ===== */
+  .glitch-overlay{
+    position:fixed; inset:0; z-index:9000;
+    background:#000;
+    opacity:0;
+    pointer-events:none;
+    overflow:hidden;
+    transition:opacity .45s var(--sleep-ease);
+  }
+  .glitch-overlay::before{
+    content:"";
+    position:absolute; inset:0;
+    background: url("image/glitch.jpg") center/cover no-repeat;
+    mix-blend-mode:normal;
+    opacity:.96;
+    filter: contrast(1.1) saturate(1.05);
+  }
+  .glitch-overlay::after{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(0deg,
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+        rgba(0,0,0,.46) 2px, rgba(0,0,0,.46) 3px);
+    mix-blend-mode:soft-light;
+    opacity:.35;
+    animation:glitchBars 0.55s steps(3,end) infinite;
+  }
+  .glitch-bars{
+    position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(90deg,
+        rgba(0,0,0,0) 0, rgba(0,0,0,0) 10px,
+        rgba(0,255,150,.55) 10px, rgba(0,255,150,.55) 14px,
+        rgba(255,0,130,.5) 14px, rgba(255,0,130,.5) 18px);
+    mix-blend-mode:screen;
+    opacity:.18;
+    animation:glitchBars 0.55s steps(3,end) infinite;
+  }
+  body.is-glitching .glitch-overlay{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* ===== GLITCH HINT – WINDOWS 95 STYLE DIALOG ===== */
+.glitch-hint{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  width:min(360px, 72vw);
+  background:#c0c0c0;
+  border:2px solid #000;
+  box-shadow:0 18px 50px rgba(0,0,0,.9);
+  font-family: "MS Sans Serif", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color:#000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+
+/* 글리치가 켜졌을 때만 보이도록 */
+body.is-glitching .glitch-hint{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* 숨김 처리 */
+.glitch-hint.is-hidden{
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+/* 윗부분 파란 타이틀 바 */
+.glitch-hint .gh-titlebar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:3px 6px;
+  background:#000080;
+  color:#fff;
+  font-size:12px;
+}
+
+/* 타이틀 텍스트 */
+.glitch-hint .gh-title{
+  font-weight:bold;
+}
+
+/* X 버튼 */
+.glitch-hint .gh-close{
+  width:18px;
+  height:18px;
+  padding:0;
+  border:1px solid #000;
+  background:#c0c0c0;
+  box-shadow:1px 1px 0 #fff, -1px -1px 0 #808080;
+  font-size:12px;
+  line-height:1;
+  cursor:pointer;
+}
+
+/* 내용 영역 */
+.glitch-hint .gh-body{
+  padding:18px 16px 10px;
+  font-size:13px;
+  line-height:1.5;
+}
+
+/* 아래쪽 버튼 영역 */
+.glitch-hint .gh-footer{
+  padding:8px 16px 12px;
+  display:flex;
+  justify-content:center;
+}
+
+/* OK 버튼 */
+.glitch-hint .gh-btn{
+  min-width:72px;
+  padding:3px 10px;
+  border:1px solid #000;
+  background:#c0c0c0;
+  box-shadow:1px 1px 0 #fff, -1px -1px 0 #808080;
+  font-size:13px;
+  cursor:pointer;
+}
+
+
+  body.is-glitching .bg,
+  body.is-glitching .orbs,
+  body.is-glitching .logo,
+  body.is-glitching #menuBtn,
+  body.is-glitching #audioBtn,
+  body.is-glitching #navPanel,
+  body.is-glitching .glitch-overlay{
+    transform:translate3d(var(--glitch-x),var(--glitch-y),0);
+    transition:transform .03s cubic-bezier(.3,.9,.5,1.3);
+  }
+  body.is-glitching .bg{
+    filter:brightness(1.06) contrast(1.22) saturate(1.25) hue-rotate(8deg);
+  }
+
+  @keyframes glitchBars{
+    0%{transform:translateX(-24px);}
+    50%{transform:translateX(18px);}
+    100%{transform:translateX(-16px);}
+  }
 </style>
 </head>
 <body>
 
 <div class="bg"></div>
+
+<!-- 발자국용 그레이 오버레이 -->
+<div id="footprintsBackdrop" class="footprints-backdrop"></div>
+
+<!-- 발자국 레이어 -->
+<div id="footprintsLayer" class="footprints-layer"></div>
+
 <a class="logo" href="Sleep Simulator.html">SlEep</a>
 
 <div class="orbs" id="orbs">
-  <!-- 오브/카드 틀만 유지: 이미지/텍스트 제거 -->
+  <!-- ORB 1: Fear -->
   <div class="card-wrap">
-    <div class="orb p1"><div class="orb-inner"></div></div>
+    <div class="orb p1">
+      <div class="orb-inner">
+        <img src="image/fear.png" alt="Hollow eyes in the dark">
+      </div>
+    </div>
+
     <div class="card card-p1">
-      <h3>Card 1</h3><div class="divider"></div>
-      <!-- 여기에 카드 내용 -->
+      <h3>Hollow Eyes</h3>
+      <div class="divider"></div>
+      <img class="thumb" src="image/fear.png" alt="Hollow Eyes">
+      <p>
+A stare that freezes the air.
+Shadows cling to every breath.
+Fear arrives before you notice.
+      </p>
     </div>
   </div>
 
+  <!-- Orb 2: Hand Shadow -->
   <div class="card-wrap">
-    <div class="orb p2"><div class="orb-inner"></div></div>
+    <div class="orb p2">
+      <div class="orb-inner">
+        <img src="image/hand.png" alt="Shadowed Hands">
+      </div>
+    </div>
+
     <div class="card card-p2">
-      <h3>Card 2</h3><div class="divider"></div>
-      <!-- 여기에 카드 내용 -->
+      <h3>Shadowed Hands</h3>
+      <div class="divider"></div>
+      <img class="thumb" src="image/hand.png" alt="Shadowed Hands">
+      <p>
+        Two hands press,  
+        shapes struggling,  
+        caught fear and silence.
+      </p>
     </div>
   </div>
 
+  <!-- Orb 3: Broken Mirror -->
   <div class="card-wrap">
-    <div class="orb p3"><div class="orb-inner"></div></div>
+    <div class="orb p3">
+      <div class="orb-inner">
+        <img src="image/broken.png" alt="Broken Mirror">
+      </div>
+    </div>
+
     <div class="card card-p3">
-      <h3>Card 3</h3><div class="divider"></div>
-      <!-- 여기에 카드 내용 -->
+      <h3>Broken Mirror</h3>
+      <div class="divider"></div>
+      <img class="thumb" src="image/broken.png" alt="Broken Mirror">
+      <p>
+        Fragments reflect fears.  
+        Every shard distorts the truth.  
+        The world breaks in silence.
+      </p>
     </div>
   </div>
 
+  <!-- Orb 4: Footprints -->
   <div class="card-wrap">
-    <div class="orb p4"><div class="orb-inner"></div></div>
+    <div class="orb p4">
+      <div class="orb-inner">
+        <img src="image/footprint.png" alt="Footprints in snow">
+      </div>
+    </div>
+
     <div class="card card-p4">
-      <h3>Card 4</h3><div class="divider"></div>
-      <!-- 여기에 카드 내용 -->
+      <h3>Left Behind</h3>
+      <div class="divider"></div>
+      <img class="thumb" src="image/footprint.png" alt="Footprints">
+      <p>
+        Footsteps trail into darkness.  
+        Each print colder than the last.  
+        Something unseen follows close.
+      </p>
     </div>
   </div>
 
+  <!-- 오브5: Eye -->
   <div class="card-wrap">
-    <div class="orb p5"><div class="orb-inner"></div></div>
+    <div class="orb p5">
+      <div class="orb-inner">
+        <img src="image/eye.png" alt="Night Watch">
+      </div>
+    </div>
+
     <div class="card card-p5">
-      <h3>Card 5</h3><div class="divider"></div>
-      <!-- 여기에 카드 내용 -->
+      <h3>Night Watch</h3>
+      <div class="divider"></div>
+      <img class="thumb" src="image/eye.png" alt="Night Watch">
+      <p>
+        A single eye waits in the dark.  
+        Watching without blinking.  
+        Silence tightens around its gaze.
+      </p>
     </div>
   </div>
 </div>
@@ -228,6 +938,15 @@
 </button>
 
 <audio id="bgm" src="dreamcore.mp3" preload="auto" loop></audio>
+
+<!-- 🔊 효과음들 추가 -->
+<audio id="sfxNoise"       src="sound/noise.mp3"        preload="auto"></audio>
+<audio id="sfxFootsteps"   src="sound/walking.mp3"      preload="auto" loop></audio>
+<audio id="sfxHand"        src="sound/hand.mp3"         preload="auto"></audio>
+<audio id="sfxGlassBreak"  src="sound/glass_break.mp3"  preload="auto"></audio>
+<audio id="sfxGlassSnap"   src="sound/glass.mp3"        preload="auto"></audio>
+<audio id="sfxEye"         src="sound/eye.mp3"          preload="auto" loop></audio>
+
 <button id="audioBtn" aria-label="배경음악 켜기/끄기" aria-pressed="false" title="배경음악 켜기/끄기">
   <img class="icon sound" src="image/sound.png" alt="" aria-hidden="true">
   <img class="icon mute"  src="image/mute.png"  alt="" aria-hidden="true">
@@ -238,13 +957,81 @@
   <div class="nav-body">
     <div class="nav-grid">
       <a class="nav-btn" href="Sleep Simulator.html">Home</a>
+      <a class="nav-btn" href="sleep.html">Sleep</a>
       <a class="nav-btn" href="dream.html">Dream</a>
       <a class="nav-btn" href="nightmare.html">Nightmare</a>
     </div>
   </div>
 </nav>
 
-<!-- 필요 없는 모든 연출/오버레이/효과 DOM은 제거했음 -->
+<!-- EYE OVERLAY -->
+<div id="eyeOverlay" class="eye-overlay" aria-hidden="true">
+  <div id="eyeCore" class="eye-core">
+    <img src="image/eye.gif" alt="Staring eye">
+    <div class="eye-hint">HOLD TO ERASE THE EYE</div>
+  </div>
+</div>
+
+<!-- GLASS OVERLAY -->
+<div id="glassOverlay" class="glass-overlay" aria-hidden="true">
+  <div class="glass-puzzle" id="glassPuzzle">
+    <div class="glass-piece top">
+      <img src="image/glass_top.png" alt="">
+    </div>
+    <div class="glass-piece left">
+      <img src="image/glass_left.png" alt="">
+    </div>
+    <div class="glass-piece right">
+      <img src="image/glass_right.png" alt="">
+    </div>
+    <div class="glass-piece bottom">
+      <img src="image/glass_bottom.png" alt="">
+    </div>
+    <div class="glass-piece mid">
+      <img src="image/glass_mid.png" alt="">
+    </div>
+  </div>
+
+  <div id="glassHint" class="glass-hint">
+    <p class="hint-label">BROKEN MIRROR</p>
+    <p class="hint-main">The mirror has shattered into pieces.</p>
+    <p class="hint-main">Drag each shard back into place.</p>
+    <p class="hint-sub">click anywhere to hide this hint</p>
+  </div>
+</div>
+
+<!-- HAND SEQUENCE OVERLAY -->
+<div id="handOverlay" class="hand-overlay" aria-hidden="true">
+  <img id="handSequenceImg" class="hand-img" src="" alt="Reaching hand">
+  <div id="handSequenceHint" class="hand-hint">
+    <p>Click to hands away</p>
+  </div>
+</div>
+
+<!-- GLITCH OVERLAY -->
+<div id="glitchOverlay" class="glitch-overlay" aria-hidden="true">
+  <div class="glitch-bars"></div>
+
+  <div id="glitchHint" class="glitch-hint">
+    <div class="gh-titlebar">
+      <span class="gh-title">SCREEN ERROR</span>
+      <button type="button" class="gh-close" aria-label="Close">×</button>
+    </div>
+    <div class="gh-body">
+      <p>The nightmare has broken the screen.</p>
+      <p>Move your cursor left &amp; right to repair the glitch.</p>
+    </div>
+    <div class="gh-footer">
+      <button type="button" class="gh-btn">OK</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 발자국 효과용 힌트 -->
+<div id="footprintHint" class="fp-hint">
+  <p class="hint-main">Your footsteps slowly melt into the dark.</p>
+</div>
 
 <div id="fxCursor"></div>
 
@@ -313,7 +1100,7 @@ b.addEventListener('click',async()=>{try{if(a.paused){await a.play();a.muted=fal
 b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.deltaY<0?.06:-.06);v=Math.max(0,Math.min(1,v));a.volume=v;a.muted=(v===0);set(v);if(a.paused&&v>0){a.play().catch(()=>{});}ui();},{passive:false});
 ['play','pause','volumechange','emptied','suspend','stalled'].forEach(ev=>a.addEventListener(ev,ui));})();
 
-/* ===== 모바일 카드 토글 보조 (액티브 래퍼) ===== */
+/* ===== 모바일 카드 토글 보조 ===== */
 (() => {
   const isTouch = matchMedia('(hover:none), (pointer:coarse)').matches;
   if (!isTouch) return;
@@ -333,6 +1120,812 @@ b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.del
   document.addEventListener('click', () => { if (openWrap) { openWrap.classList.remove('active'); openWrap = null; } }, true);
   addEventListener('resize', () => { if (openWrap) { openWrap.classList.remove('active'); openWrap = null; } }, { passive:true });
 })();
+
+/* ===== EYE GIF + LONG PRESS SHAKE ===== */
+(() => {
+  const trigger = document.querySelector('.orb.p5 .orb-inner');
+  const overlay = document.getElementById('eyeOverlay');
+  const core    = document.getElementById('eyeCore');
+  const root    = document.documentElement;
+  const eyeAudio = document.getElementById('sfxEye'); // 🔊 추가
+
+  if (!trigger || !overlay || !core) return;
+
+  let holding    = false;
+  let holdTimer  = null;
+  let shaking    = false;
+  let shakeRAF   = null;
+  let shakeStart = 0;
+
+  const HOLD_DURATION = 1400;
+  const MAX_AMP       = 30;
+
+  function resetShake(){
+    shaking = false;
+    document.body.classList.remove('is-eye-shaking');
+    root.style.setProperty('--eye-shake-x','0px');
+    root.style.setProperty('--eye-shake-y','0px');
+    if (shakeRAF) cancelAnimationFrame(shakeRAF);
+    shakeRAF = null;
+  }
+
+    let eyeFadeTimer = null;
+
+  function startEyeSound() {
+    if (!eyeAudio) return;
+    if (eyeFadeTimer) { clearInterval(eyeFadeTimer); eyeFadeTimer = null; }
+    eyeAudio.volume = 1;
+    eyeAudio.currentTime = 0;
+    eyeAudio.loop = true;
+    eyeAudio.play().catch(() => {});
+  }
+
+  function stopEyeSoundFade() {
+    if (!eyeAudio) return;
+    if (eyeFadeTimer) clearInterval(eyeFadeTimer);
+
+    eyeFadeTimer = setInterval(() => {
+      if (eyeAudio.volume > 0.08) {
+        eyeAudio.volume -= 0.08;
+      } else {
+        eyeAudio.volume = 0;
+        eyeAudio.pause();
+        eyeAudio.currentTime = 0;
+        clearInterval(eyeFadeTimer);
+        eyeFadeTimer = null;
+      }
+    }, 60);
+  }
+
+  function startShake(){
+    if (shaking) return;
+    shaking = true;
+    document.body.classList.add('is-eye-shaking');
+    shakeStart = performance.now();
+
+    const loop = (t) => {
+      if (!shaking) return;
+      const elapsed  = t - shakeStart;
+      const progress = Math.min(1, elapsed / HOLD_DURATION);
+      const amp = MAX_AMP * progress * progress;
+      const angle = t / 40;
+
+      const x = Math.cos(angle * 1.4) * amp;
+      const y = Math.sin(angle * 1.9) * amp;
+
+      root.style.setProperty('--eye-shake-x', x.toFixed(1) + 'px');
+      root.style.setProperty('--eye-shake-y', y.toFixed(1) + 'px');
+
+      if (progress < 1){
+        shakeRAF = requestAnimationFrame(loop);
+      } else {
+        finishEye();
+      }
+    };
+
+    shakeRAF = requestAnimationFrame(loop);
+  }
+
+  function cancelHold(){
+    holding = false;
+    if (holdTimer){
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+    resetShake();
+  // 🔊 소리 페이드 아웃
+    stopEyeSoundFade();
+  }
+
+  function finishEye(){
+    cancelHold();
+    overlay.classList.remove('is-visible');
+    overlay.setAttribute('aria-hidden','true');
+    document.body.classList.remove('is-eye-on');
+  }
+
+   function onPointerDown(e){
+    e.preventDefault();
+    e.stopPropagation();
+    if (!overlay.classList.contains('is-visible')) return;
+    if (holding) return;
+
+    holding = true;
+    startShake();
+
+    // 🔊 눈 사운드 시작
+    startEyeSound();
+
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => {
+      if (holding){
+        finishEye();
+      }
+    }, HOLD_DURATION + 200);
+  }
+
+
+  function onPointerUp(e){
+    if (!holding) return;
+    e.preventDefault();
+    e.stopPropagation();
+    cancelHold();
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    overlay.classList.add('is-visible');
+    overlay.setAttribute('aria-hidden','false');
+    document.body.classList.add('is-eye-on');
+    resetShake();
+  });
+
+  core.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+  window.addEventListener('pointerleave', () => {
+    if (holding){
+      cancelHold();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('is-visible')){
+      finishEye();
+    }
+  });
+})();
+
+/* ===== GLASS SHARDS PUZZLE (5조각 버전) ===== */
+(() => {
+  const trigger = document.querySelector('.orb.p3 .orb-inner'); // Broken Mirror orb
+  const overlay = document.getElementById('glassOverlay');
+  const puzzle  = document.getElementById('glassPuzzle');
+  const hint    = document.getElementById('glassHint');
+  const glassBreakAudio = document.getElementById('sfxGlassBreak'); // 🔊 추가
+  const glassSnapAudio  = document.getElementById('sfxGlassSnap');  // 🔊 추가
+  if (!trigger || !overlay || !puzzle) return;
+
+  const pieces  = [...puzzle.querySelectorAll('.glass-piece')];
+
+  const solvedPos = new Map();
+  const SNAP_RADIUS  = 26;
+  const SOLVE_RADIUS = 26;
+
+  let active   = null;
+  let startX   = 0;
+  let startY   = 0;
+  let baseLeft = 0;
+  let baseTop  = 0;
+  let zCounter = 10;
+
+  function initSolvedPositions(){
+    solvedPos.clear();
+    const rectPuzzle = puzzle.getBoundingClientRect();
+
+    pieces.forEach(piece => {
+      const rectPiece  = piece.getBoundingClientRect();
+      const left = rectPiece.left - rectPuzzle.left;
+      const top  = rectPiece.top  - rectPuzzle.top;
+
+      solvedPos.set(piece, { left, top });
+
+      piece.style.left = left + 'px';
+      piece.style.top  = top  + 'px';
+    });
+  }
+
+  function scatterPieces(){
+    const rectPuzzle = puzzle.getBoundingClientRect();
+
+    pieces.forEach(piece => {
+      const solved = solvedPos.get(piece);
+      if (!solved) return;
+
+      const offsetX = (Math.random() * 200) - 100;
+      const offsetY = (Math.random() * 200) - 100;
+
+      let left = solved.left + offsetX;
+      let top  = solved.top  + offsetY;
+
+      const maxLeft = rectPuzzle.width  - piece.offsetWidth;
+      const maxTop  = rectPuzzle.height - piece.offsetHeight;
+
+      left = Math.max(0, Math.min(maxLeft, left));
+      top  = Math.max(0, Math.min(maxTop,  top));
+
+      piece.style.left = left + 'px';
+      piece.style.top  = top  + 'px';
+
+      piece.dataset.snapped = '0';
+    });
+  }
+
+  function openOverlay(){
+    overlay.classList.add('is-visible');
+    overlay.setAttribute('aria-hidden','false');
+    document.body.classList.add('is-glass-on');
+
+    // 🔊 깨지는 소리 한 번
+    if (glassBreakAudio) {
+      glassBreakAudio.currentTime = 0;
+      glassBreakAudio.loop = false;
+      glassBreakAudio.play().catch(() => {});
+    }
+
+    initSolvedPositions();
+    scatterPieces();
+
+    if (hint){
+      hint.classList.add('is-visible');
+    }
+  }
+
+  function closeOverlay(){
+    overlay.classList.remove('is-visible');
+    overlay.setAttribute('aria-hidden','true');
+    document.body.classList.remove('is-glass-on');
+    active = null;
+    if (hint){
+      hint.classList.remove('is-visible');
+    }
+  }
+
+  trigger.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    openOverlay();
+  });
+
+  if (hint){
+    hint.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      hint.classList.remove('is-visible');
+    });
+  }
+  overlay.addEventListener('click', (e)=>{
+    if (e.target === overlay && hint){
+      hint.classList.remove('is-visible');
+    }
+  });
+
+  function onPointerDown(e){
+    const target = e.target.closest('.glass-piece');
+    if (!target) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    active = target;
+    const rectPuzzle = puzzle.getBoundingClientRect();
+    const rectPiece  = active.getBoundingClientRect();
+
+    baseLeft = rectPiece.left - rectPuzzle.left;
+    baseTop  = rectPiece.top  - rectPuzzle.top;
+    startX   = e.clientX;
+    startY   = e.clientY;
+
+    active.style.zIndex = (++zCounter).toString();
+  }
+
+  function onPointerMove(e){
+    if (!active) return;
+    e.preventDefault();
+
+    const rectPuzzle = puzzle.getBoundingClientRect();
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    let left = baseLeft + dx;
+    let top  = baseTop  + dy;
+
+    const maxLeft = rectPuzzle.width  - active.offsetWidth;
+    const maxTop  = rectPuzzle.height - active.offsetHeight;
+
+    left = Math.max(0, Math.min(maxLeft, left));
+    top  = Math.max(0, Math.min(maxTop,  top));
+
+    active.style.left = left + 'px';
+    active.style.top  = top  + 'px';
+  }
+
+      function snapIfClose(piece){
+    const solved = solvedPos.get(piece);
+    if (!solved) return;
+
+    const rectPuzzle = puzzle.getBoundingClientRect();
+    const rectPiece  = piece.getBoundingClientRect();
+
+    const left = rectPiece.left - rectPuzzle.left;
+    const top  = rectPiece.top  - rectPuzzle.top;
+
+    const dx = left - solved.left;
+    const dy = top  - solved.top;
+    const dist = Math.hypot(dx, dy);
+
+    const wasSnapped = piece.dataset.snapped === '1';
+
+    if (dist <= SNAP_RADIUS){
+      piece.style.left = solved.left + 'px';
+      piece.style.top  = solved.top  + 'px';
+      piece.dataset.snapped = '1';
+
+      // 🔊 새로 맞춘 순간에만 사운드
+      if (!wasSnapped && glassSnapAudio) {
+        glassSnapAudio.currentTime = 0;
+        glassSnapAudio.play().catch(() => {});
+      }
+    } else {
+      piece.dataset.snapped = '0';
+    }
+  }
+
+
+
+  function checkSolved(){
+    let allSnapped = true;
+    pieces.forEach(piece => {
+      if (piece.dataset.snapped !== '1'){
+        allSnapped = false;
+      }
+    });
+
+    if (!allSnapped) return;
+
+    setTimeout(() => {
+      let stillSnapped = true;
+      pieces.forEach(piece => {
+        if (piece.dataset.snapped !== '1'){
+          stillSnapped = false;
+        }
+      });
+      if (stillSnapped){
+        closeOverlay();
+      }
+    }, 500);
+  }
+
+  function onPointerUp(e){
+    if (!active) return;
+    e.preventDefault();
+    snapIfClose(active);
+    active = null;
+    checkSolved();
+  }
+
+  puzzle.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointermove', onPointerMove, {passive:false});
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+
+  window.addEventListener('keydown',(e)=>{
+    if (e.key === 'Escape' && overlay.classList.contains('is-visible')){
+      closeOverlay();
+    }
+  });
+})();
+
+/* ===== HAND SEQUENCE ===== */
+(() => {
+  const trigger = document.querySelector('.orb.p2 .orb-inner');
+  const overlay = document.getElementById('handOverlay');
+  const img     = document.getElementById('handSequenceImg');
+  const hint    = document.getElementById('handSequenceHint');
+  const root    = document.documentElement;
+  const handAudio = document.getElementById('sfxHand'); // 🔊 추가
+
+  if (!trigger || !overlay || !img) return;
+
+  let step = 0;
+  let busy = false;
+
+  function resetImgClasses(){
+    img.className = 'hand-img';
+  }
+
+  function screenShake(duration = 420){
+    document.body.classList.add('is-hand-shaking');
+    let start = null;
+
+    function frame(t){
+      if (!start) start = t;
+      const elapsed  = t - start;
+      const progress = Math.min(1, elapsed / duration);
+      const strength = (1 - progress) * 22;
+
+      const x = (Math.random() * 2 - 1) * strength;
+      const y = (Math.random() * 2 - 1) * strength;
+
+      root.style.setProperty('--hand-shake-x', x.toFixed(1) + 'px');
+      root.style.setProperty('--hand-shake-y', y.toFixed(1) + 'px');
+
+      if (elapsed < duration){
+        requestAnimationFrame(frame);
+      } else {
+        root.style.setProperty('--hand-shake-x', '0px');
+        root.style.setProperty('--hand-shake-y', '0px');
+        document.body.classList.remove('is-hand-shaking');
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  function endSequence(){
+    overlay.classList.remove('is-active');
+    overlay.setAttribute('aria-hidden','true');
+    resetImgClasses();
+    img.style.display = 'none';
+    step = 0;
+    busy = false;
+    if (hint) hint.classList.remove('is-visible');
+  }
+
+  function showHand(side){
+    busy = false;
+    resetImgClasses();
+    img.style.display = 'block';
+    img.src = side === 'left' ? 'image/hand_L.png' : 'image/hand_R.png';
+
+    // 🔊 손 사운드
+    if (handAudio) {
+      handAudio.currentTime = 0;
+      handAudio.play().catch(() => {});
+    }
+
+    if (side === 'left'){
+      img.classList.add('from-left');
+    } else {
+      img.classList.add('from-right');
+    }
+
+    void img.offsetWidth;
+    requestAnimationFrame(() => {
+      img.classList.add('is-in');
+    });
+
+    if (hint && step === 1){
+      hint.classList.add('is-visible');
+    }
+  }
+
+  function nextStep(){
+    step++;
+    if (step === 1){
+      showHand('right');
+    } else if (step === 2){
+      showHand('left');
+    } else if (step === 3){
+      showHand('right');
+    } else {
+      endSequence();
+    }
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (overlay.classList.contains('is-active')) return;
+    overlay.classList.add('is-active');
+    overlay.setAttribute('aria-hidden','false');
+    step = 0;
+    nextStep();
+  });
+
+  img.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (busy || step === 0) return;
+    busy = true;
+    if (hint) hint.classList.remove('is-visible');
+
+    img.classList.add('is-shaking');
+    screenShake(450);
+
+    setTimeout(() => {
+      img.classList.remove('is-shaking');
+      img.classList.remove('is-in');
+
+      const onEnd = () => {
+        img.removeEventListener('transitionend', onEnd);
+        nextStep();
+      };
+      img.addEventListener('transitionend', onEnd);
+    }, 340);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('is-active')){
+      endSequence();
+    }
+  });
+})();
+
+/* ===== HOLLOW EYES 글리치 인터랙션 ===== */
+(() => {
+  const hollowInner = document.querySelector('.orb.p1 .orb-inner');
+  const overlay = document.getElementById('glitchOverlay');
+  const hint = document.getElementById('glitchHint');
+  const root = document.documentElement;
+  const noiseAudio = document.getElementById('sfxNoise'); // 🔊 추가
+  if (!hollowInner || !overlay) return;
+
+  let active = false;
+  let shakeScore = 0;
+  let lastX = null;
+  let lastDir = 0;
+  let lastTime = 0;
+  let hideTimer = null;
+
+  function resetShake() {
+    shakeScore = 0;
+    lastX = null;
+    lastDir = 0;
+    lastTime = 0;
+    root.style.setProperty('--glitch-x', '0px');
+    root.style.setProperty('--glitch-y', '0px');
+  }
+
+  function stopGlitch() {
+    if (!active) return;
+    active = false;
+    document.body.classList.remove('is-glitching');
+    overlay.setAttribute('aria-hidden', 'true');
+
+     // 🔊 noise 끄기
+    if (noiseAudio) {
+      noiseAudio.pause();
+      noiseAudio.currentTime = 0;
+    }
+
+    resetShake();
+    window.removeEventListener('mousemove', onMove);
+  }
+
+  function onMove(e) {
+    if (!active) return;
+    const now = performance.now();
+
+    if (lastX === null) {
+      lastX = e.clientX;
+      lastTime = now;
+      return;
+    }
+
+    const dx = e.clientX - lastX;
+    const dir = dx > 0 ? 1 : dx < 0 ? -1 : 0;
+    const dt = Math.max(16, now - lastTime);
+    const speed = Math.abs(dx) / dt;
+
+    const base = Math.min(32, Math.abs(dx) * 0.45);
+    const shakeX = dir * base;
+    const shakeY = (Math.random() - 0.5) * 10;
+    root.style.setProperty('--glitch-x', shakeX.toFixed(2) + 'px');
+    root.style.setProperty('--glitch-y', shakeY.toFixed(2) + 'px');
+
+    if (dir !== 0 && lastDir !== 0 && dir !== lastDir && speed > 0.4) {
+      shakeScore++;
+      if (shakeScore > 10) {
+        stopGlitch();
+        return;
+      }
+    }
+
+    if (dir !== 0) lastDir = dir;
+    lastX = e.clientX;
+    lastTime = now;
+  }
+
+  function hideHint() {
+    if (!hint) return;
+    clearTimeout(hideTimer);
+    hint.classList.add('is-hidden');
+  }
+
+  function scheduleHintAutoHide() {
+    if (!hint) return;
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      hideHint();
+    }, 2600);
+  }
+
+  function startGlitch() {
+    if (active) return;
+    active = true;
+    document.body.classList.add('is-glitching');
+    overlay.setAttribute('aria-hidden', 'false');
+
+    // 🔊 noise 켜기
+    if (noiseAudio) {
+      noiseAudio.currentTime = 0;
+      noiseAudio.loop = true;
+      noiseAudio.play().catch(() => {});
+    }
+
+    if (hint) {
+      hint.classList.remove('is-hidden');
+      scheduleHintAutoHide();
+    }
+
+    resetShake();
+    window.addEventListener('mousemove', onMove);
+  }
+
+  // 윈도우창 X 버튼 / OK 버튼도 눌렀을 때 닫히게
+  if (hint) {
+    hint.querySelectorAll('.gh-close, .gh-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideHint();
+      });
+    });
+  }
+
+  hollowInner.addEventListener('click', (e) => {
+    e.preventDefault();
+    startGlitch();
+  });
+
+  if (hint) {
+    hint.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideHint();
+    });
+  }
+
+  overlay.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideHint();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') stopGlitch();
+  });
+})();
+
+/* ===== FOOTPRINT TRAIL ===== */
+(() => {
+  const layer    = document.getElementById('footprintsLayer');
+  const hint     = document.getElementById('footprintHint');
+  const backdrop = document.getElementById('footprintsBackdrop');
+  const trigger  = document.querySelector('.orb.p4 .orb-inner');
+  const footAudio = document.getElementById('sfxFootsteps'); // 🔊 추가
+
+  if (!layer || !trigger) return;
+
+  const MAX_FOOTPRINTS = 20;
+  const MIN_INTERVAL   = 260;
+  const MIN_DIST_SQ    = 1600;
+
+  let created     = 0;
+  let isLeft      = false;
+  let lastTime    = 0;
+  let lastX       = null;
+  let lastY       = null;
+  let effectActive = false;
+  let footFadeTimer = null; // 🔊 페이드용
+
+  function spawnFootprint(x, y){
+    const img = document.createElement('img');
+    img.className = 'footprint';
+
+    const side = isLeft ? 'l' : 'r';
+    isLeft = !isLeft;
+
+    img.src = side === 'l'
+      ? 'image/footprint_l.png'
+      : 'image/footprint_r.png';
+
+    img.style.left = x + 'px';
+    img.style.top  = y + 'px';
+
+    const baseRot = side === 'l' ? -16 : 16;
+    const rot = baseRot + (Math.random() * 16 - 8);
+    img.style.transform = 'translate(-50%, -50%) rotate(' + rot.toFixed(1) + 'deg)';
+
+    img.addEventListener('animationend', () => {
+      img.remove();
+    });
+
+    layer.appendChild(img);
+  }
+
+    function fadeOutFootsteps() {
+    if (!footAudio) return;
+    if (footFadeTimer) clearInterval(footFadeTimer);
+
+    footFadeTimer = setInterval(() => {
+      if (footAudio.volume > 0.06) {
+        footAudio.volume -= 0.06;
+      } else {
+        footAudio.volume = 0;
+        footAudio.pause();
+        footAudio.currentTime = 0;
+        clearInterval(footFadeTimer);
+        footFadeTimer = null;
+      }
+    }, 60);
+  }
+
+  function hideHint(){
+    if (!hint) return;
+    hint.classList.remove('is-visible');
+  }
+
+  if (hint){
+    hint.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      hideHint();
+    });
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+
+    effectActive = true;
+    created = 0;
+    lastTime = 0;
+    lastX = null;
+    lastY = null;
+
+    if (backdrop){
+      backdrop.classList.add('is-active');
+    }
+    if (hint){
+      hint.classList.add('is-visible');
+    }
+
+    // 🔊 발자국 소리 시작
+    if (footAudio) {
+      if (footFadeTimer) { clearInterval(footFadeTimer); footFadeTimer = null; }
+      footAudio.volume = 1;
+      footAudio.currentTime = 0;
+      footAudio.loop = true;
+      footAudio.play().catch(() => {});
+    }
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (!effectActive) return;
+
+    const x = e.clientX;
+    const y = e.clientY;
+    if (x === 0 && y === 0) return;
+
+    const now = performance.now();
+    if (lastTime && (now - lastTime) < MIN_INTERVAL){
+      return;
+    }
+
+    if (lastX !== null && lastY !== null){
+      const dx = x - lastX;
+      const dy = y - lastY;
+      const distSq = dx*dx + dy*dy;
+      if (distSq < MIN_DIST_SQ){
+        return;
+      }
+    }
+
+    lastTime = now;
+    lastX = x;
+    lastY = y;
+
+    spawnFootprint(x, y);
+    created++;
+
+    if (created >= MAX_FOOTPRINTS){
+      effectActive = false;
+
+      if (backdrop){
+        backdrop.classList.remove('is-active');
+      }
+      if (hint){
+        hint.classList.remove('is-visible');
+      }
+      // 🔊 발자국 소리 페이드 아웃
+      fadeOutFootsteps();
+    }
+
+  }, { passive:true });
+})();
+
 </script>
 </body>
 </html>

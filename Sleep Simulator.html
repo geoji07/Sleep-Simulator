@@ -646,23 +646,30 @@ addEventListener('wheel',(e)=>{
   });
 })();
 
-/* ===== 배경 BGM (오디오 토글) ===== */
-(()=>{
-  const a=document.getElementById('bgm'), b=document.getElementById('audioBtn');
-  if(!a||!b) return;
-
-  const get=()=>{ const v=parseFloat(localStorage.getItem('bgmVol')); return Number.isFinite(v)?Math.max(0,Math.min(1,v)):0.35; };
-  const set=v=>localStorage.setItem('bgmVol',String(Math.max(0,Math.min(1,v))));
-  let raf=null;
-  const fade=(to,ms=500)=>{ if(raf)cancelAnimationFrame(raf); const s=a.volume,t0=performance.now();
-    const step=t=>{ const k=Math.min(1,(t-t0)/ms); a.volume=s+(to-s)*k; if(k<1) raf=requestAnimationFrame(step); };
-    raf=requestAnimationFrame(step);
-  };
-  const ui=()=>{ const m=a.paused||a.muted||a.volume===0;
-    b.classList.toggle('is-muted',m);
-    b.classList.toggle('is-playing',!m);
-    b.setAttribute('aria-pressed', String(!m));
-  };
+/* ===== 배경 BGM ===== */
+(()=>{const a=document.getElementById('bgm'),b=document.getElementById('audioBtn');if(!a||!b)return;
+const get=()=>{const v=parseFloat(localStorage.getItem('bgmVol'));return Number.isFinite(v)?Math.max(0,Math.min(1,v)):0.35;};
+const set=v=>localStorage.setItem('bgmVol',String(Math.max(0,Math.min(1,v))));
+let raf=null;const fade=(to,ms=500)=>{if(raf)cancelAnimationFrame(raf);const s=a.volume,t0=performance.now();
+const step=t=>{const k=Math.min(1,(t-t0)/ms);a.volume=s+(to-s)*k;if(k<1)raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);};
+const ui=()=>{const m=a.paused||a.muted||a.volume===0;b.classList.toggle('is-muted',m);b.classList.toggle('is-playing',!m);b.setAttribute('aria-pressed',String(!m));};
+a.muted=false;a.volume=0.0;(async()=>{try{await a.play();fade(get(),900);}catch(_){}finally{ui();}})();
+b.addEventListener('click',async()=>{
+  try{
+    if(a.paused){await a.play();a.muted=false;fade(Math.max(.05,get()),400);}
+    else{fade(0,300);setTimeout(()=>{a.pause();ui();},320);}
+  }catch(_){}
+  finally{ui();}
+});
+b.addEventListener('wheel',e=>{
+  e.preventDefault();
+  let v=(a.volume||get())+(e.deltaY<0?.06:-.06);
+  v=Math.max(0,Math.min(1,v));
+  a.volume=v;a.muted=(v===0);set(v);
+  if(a.paused&&v>0){a.play().catch(()=>{});}
+  ui();
+},{passive:false});
+['play','pause','volumechange','emptied','suspend','stalled'].forEach(ev=>a.addEventListener(ev,ui));})();
 
   // iOS/모바일 자동재생 제한: 첫 사용자 제스처에서 play 허용
   const armAutoplay = ()=>{
@@ -692,7 +699,6 @@ addEventListener('wheel',(e)=>{
 
   ['play','pause','volumechange','emptied','suspend','stalled'].forEach(ev=>a.addEventListener(ev,ui));
   ui();
-})();
 
 function setVH(){
   document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
