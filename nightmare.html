@@ -418,19 +418,28 @@
   }
   .eye-hint{
     position:absolute;
-    left:50%;
-    bottom:-28px;
-    transform:translateX(-50%);
-    padding:6px 14px;
-    border-radius:999px;
-    background:#000000c8;
-    color:#f5f5f5;
-    font-size:11px;
-    letter-spacing:.16em;
-    text-transform:uppercase;
-    white-space:nowrap;
+    left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    font-family: ui-sans-serif, system-ui, "Noto Sans KR", Apple SD Gothic Neo, Malgun Gothic;
+    font-size:clamp(18px, 3.2vmin, 28px);
+    color:#fff;
+    text-shadow:0 8px 30px rgba(0,0,0,.7);
+    letter-spacing:.04em;
+    opacity:0;
     pointer-events:none;
+    transition:opacity .25s ease;
   }
+
+  /* ✅ overlay가 보이면 힌트도 보이게 */
+.eye-overlay.is-visible .eye-hint{
+  opacity:1;
+}
+
+/* ✅ 길게 누르는 동안(흔들림 시작)엔 힌트 숨김 */
+body.is-eye-shaking .eye-hint{
+  opacity:0 !important;
+}
+
 
   /* 화면 전체 떨림 (눈용) */
   body.is-eye-shaking .bg,
@@ -968,7 +977,7 @@ Fear arrives before you notice.
 <div id="eyeOverlay" class="eye-overlay" aria-hidden="true">
   <div id="eyeCore" class="eye-core">
     <img src="image/eye.gif" alt="Staring eye">
-    <div class="eye-hint">HOLD TO ERASE THE EYE</div>
+    <div class="eye-hint">Hold to ease the eye</div>
   </div>
 </div>
 
@@ -1126,8 +1135,9 @@ b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.del
   const trigger = document.querySelector('.orb.p5 .orb-inner');
   const overlay = document.getElementById('eyeOverlay');
   const core    = document.getElementById('eyeCore');
+  const hintEl  = overlay?.querySelector('.eye-hint');
   const root    = document.documentElement;
-  const eyeAudio = document.getElementById('sfxEye'); // 🔊 추가
+  const eyeAudio = document.getElementById('sfxEye');
 
   if (!trigger || !overlay || !core) return;
 
@@ -1140,6 +1150,15 @@ b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.del
   const HOLD_DURATION = 1400;
   const MAX_AMP       = 30;
 
+  function showHint(){
+    if (!hintEl) return;
+    hintEl.style.opacity = '1';
+  }
+  function hideHint(){
+    if (!hintEl) return;
+    hintEl.style.opacity = '0';
+  }
+
   function resetShake(){
     shaking = false;
     document.body.classList.remove('is-eye-shaking');
@@ -1149,7 +1168,7 @@ b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.del
     shakeRAF = null;
   }
 
-    let eyeFadeTimer = null;
+  let eyeFadeTimer = null;
 
   function startEyeSound() {
     if (!eyeAudio) return;
@@ -1175,6 +1194,26 @@ b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.del
         eyeFadeTimer = null;
       }
     }, 60);
+  }
+
+  function cancelHold(){
+    holding = false;
+    if (holdTimer){
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+    resetShake();
+    stopEyeSoundFade();
+    // 손 떼면 힌트 다시 보여주기 (overlay 열린 상태면)
+    if (overlay.classList.contains('is-visible')) showHint();
+  }
+
+  function finishEye(){
+    cancelHold();
+    overlay.classList.remove('is-visible');
+    overlay.setAttribute('aria-hidden','true');
+    document.body.classList.remove('is-eye-on');
+    hideHint();
   }
 
   function startShake(){
@@ -1206,44 +1245,25 @@ b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.del
     shakeRAF = requestAnimationFrame(loop);
   }
 
-  function cancelHold(){
-    holding = false;
-    if (holdTimer){
-      clearTimeout(holdTimer);
-      holdTimer = null;
-    }
-    resetShake();
-  // 🔊 소리 페이드 아웃
-    stopEyeSoundFade();
-  }
-
-  function finishEye(){
-    cancelHold();
-    overlay.classList.remove('is-visible');
-    overlay.setAttribute('aria-hidden','true');
-    document.body.classList.remove('is-eye-on');
-  }
-
-   function onPointerDown(e){
+  function onPointerDown(e){
     e.preventDefault();
     e.stopPropagation();
     if (!overlay.classList.contains('is-visible')) return;
     if (holding) return;
 
     holding = true;
-    startShake();
 
-    // 🔊 눈 사운드 시작
+    // ✅ 누르기 시작하면 힌트 숨김
+    hideHint();
+
+    startShake();
     startEyeSound();
 
     if (holdTimer) clearTimeout(holdTimer);
     holdTimer = setTimeout(() => {
-      if (holding){
-        finishEye();
-      }
+      if (holding) finishEye();
     }, HOLD_DURATION + 200);
   }
-
 
   function onPointerUp(e){
     if (!holding) return;
@@ -1257,16 +1277,18 @@ b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.del
     overlay.classList.add('is-visible');
     overlay.setAttribute('aria-hidden','false');
     document.body.classList.add('is-eye-on');
+
     resetShake();
+
+    // ✅ overlay 열릴 때 힌트 보이기
+    showHint();
   });
 
   core.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('pointercancel', onPointerUp);
   window.addEventListener('pointerleave', () => {
-    if (holding){
-      cancelHold();
-    }
+    if (holding) cancelHold();
   });
 
   window.addEventListener('keydown', (e) => {
@@ -1275,6 +1297,7 @@ b.addEventListener('wheel',e=>{e.preventDefault();let v=(a.volume||get())+(e.del
     }
   });
 })();
+
 
 /* ===== GLASS SHARDS PUZZLE (5조각 버전) ===== */
 (() => {
